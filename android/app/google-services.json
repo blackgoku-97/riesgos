@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "526077789637",
+    "project_id": "riesgosapp-5f8b5",
+    "storage_bucket": "riesgosapp-5f8b5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:526077789637:android:a86999983c1fdbce0d77ac",
+        "android_client_info": {
+          "package_name": "com.example.gestion_riesgos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAuVgJGbfLl42y_8QtwGJiVgcNX6OWFi6Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
