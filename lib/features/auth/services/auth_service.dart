@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseFirestore db = FirebaseFirestore.instance; // <- expuesto para consultas externas
 
   // --- Validadores públicos ---
   bool isValidEmail(String email) => _isValidEmail(email);
@@ -33,7 +33,7 @@ class AuthService {
     if (!startsWithCapital(nombre)) throw Exception('El nombre debe comenzar con mayúscula');
     if (!startsWithCapital(cargo)) throw Exception('El cargo debe comenzar con mayúscula');
 
-    final perfilesRef = _db.collection('perfiles');
+    final perfilesRef = db.collection('perfiles');
 
     int totalUsuarios;
     try {
@@ -82,6 +82,17 @@ class AuthService {
         throw Exception('Error al iniciar sesión: ${e.message}');
       }
     }
+  }
+
+  // --- Logout ---
+  Future<void> logoutUser() async {
+    await _auth.signOut();
+  }
+
+  // --- Recuperar contraseña ---
+  Future<void> sendPasswordReset(String email) async {
+    if (!_isValidEmail(email)) throw Exception('El correo electrónico no es válido');
+    await _auth.sendPasswordResetEmail(email: email);
   }
 
   // --- Validaciones internas ---

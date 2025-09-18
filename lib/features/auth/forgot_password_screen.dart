@@ -1,28 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/services/auth_service.dart';
-import '../auth/widgets/password_field.dart';
 import '../auth/widgets/user_field.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _userController = TextEditingController();
-  final _passwordController = TextEditingController();
-
   final _authService = AuthService();
 
-  bool _loading = false;
-  String? _error;
-  bool _obscurePass = true;
-
   bool _userValid = false;
-  bool _passValid = false;
+  bool _loading = false;
+  String? _message;
+  String? _error;
 
   @override
   void initState() {
@@ -32,21 +27,15 @@ class _LoginScreenState extends State<LoginScreen> {
       _userValid = _authService.isValidEmail(text) || _authService.isValidRUT(text.toUpperCase());
       setState(() {});
     });
-    _passwordController.addListener(() {
-      _passValid = _authService.isValidPassword(_passwordController.text.trim());
-      setState(() {});
-    });
   }
 
-  bool get _formValid => _userValid && _passValid;
-
-  Future<void> _login() async {
+  Future<void> _sendReset() async {
     String userInput = _userController.text.trim();
-    final password = _passwordController.text.trim();
 
     setState(() {
       _loading = true;
       _error = null;
+      _message = null;
     });
 
     try {
@@ -65,14 +54,12 @@ class _LoginScreenState extends State<LoginScreen> {
         emailToUse = query.docs.first['email'];
       }
 
-      await _authService.loginUser(email: emailToUse, password: password);
-
-      if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      await _authService.sendPasswordReset(emailToUse);
+      setState(() => _message = 'Se ha enviado un enlace de recuperación a $emailToUse');
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      setState(() => _loading = false);
     }
   }
 
@@ -82,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.negro,
       appBar: AppBar(
         backgroundColor: AppColors.negro,
-        title: const Text('Iniciar sesión'),
+        title: const Text('Recuperar contraseña'),
       ),
       body: SafeArea(
         child: Center(
@@ -91,8 +78,14 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Image.asset('assets/images/logo.png', height: 100),
-                const SizedBox(height: 32),
+                const Icon(Icons.lock_reset, size: 80, color: Colors.white70),
+                const SizedBox(height: 24),
+                const Text(
+                  'Ingresa tu correo electrónico o RUT y te enviaremos un enlace para restablecer tu contraseña.',
+                  style: TextStyle(color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
 
                 UserField(
                   controller: _userController,
@@ -100,20 +93,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                PasswordField(
-                  controller: _passwordController,
-                  label: 'Contraseña',
-                  obscure: _obscurePass,
-                  onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
-                  isValid: _passValid,
-                  helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
-                ),
-                const SizedBox(height: 12),
-
                 if (_error != null)
                   Text(
                     _error!,
                     style: const TextStyle(color: Colors.redAccent),
+                    textAlign: TextAlign.center,
+                  ),
+                if (_message != null)
+                  Text(
+                    _message!,
+                    style: const TextStyle(color: Colors.greenAccent),
                     textAlign: TextAlign.center,
                   ),
                 const SizedBox(height: 24),
@@ -127,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: (!_formValid || _loading) ? null : _login,
+                  onPressed: (!_userValid || _loading) ? null : _sendReset,
                   child: _loading
                       ? const SizedBox(
                           height: 22,
@@ -138,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : const Text(
-                          'Iniciar sesión',
+                          'Enviar enlace',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -146,20 +135,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                  onPressed: () => Navigator.pop(context),
                   child: const Text(
-                    '¿Olvidaste tu contraseña?',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/register'),
-                  child: const Text(
-                    '¿No tienes cuenta? Regístrate',
+                    'Volver al inicio de sesión',
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
