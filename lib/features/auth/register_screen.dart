@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
+import '../auth/services/auth_service.dart';
+import '../auth/widgets/custom_text_field.dart';
+import '../auth/widgets/password_field.dart';
+import '../auth/widgets/rut_field.dart';
+import '../auth/widgets/email_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,32 +21,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
 
+  final _authService = AuthService();
+
   bool _loading = false;
   String? _error;
   bool _obscurePass = true;
   bool _obscureConfirm = true;
 
+  bool _emailValid = false;
+  bool _rutValid = false;
+  bool _passValid = false;
+  bool _nombreValid = false;
+  bool _cargoValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(() => setState(() => _emailValid = _authService.isValidEmail(_emailController.text.trim())));
+    _rutController.addListener(() => setState(() => _rutValid = _authService.isValidRUT(_rutController.text.trim().toUpperCase())));
+    _passwordController.addListener(() => setState(() => _passValid = _authService.isValidPassword(_passwordController.text.trim())));
+    _nombreController.addListener(() => setState(() => _nombreValid = _authService.startsWithCapital(_nombreController.text.trim())));
+    _cargoController.addListener(() => setState(() => _cargoValid = _authService.startsWithCapital(_cargoController.text.trim())));
+    _confirmController.addListener(() => setState(() {}));
+  }
+
+  bool get _confirmValid {
+    final c = _confirmController.text.trim();
+    return c.isNotEmpty && c == _passwordController.text.trim() && _passValid;
+  }
+
+  bool get _formValid =>
+      _nombreValid && _rutValid && _cargoValid && _emailValid && _passValid && _confirmValid;
+
   Future<void> _register() async {
-    final nombre = _nombreController.text.trim();
+    final nombre = _authService.capitalize(_nombreController.text.trim());
     final rut = _rutController.text.trim().toUpperCase();
-    final cargo = _cargoController.text.trim();
+    final cargo = _authService.capitalize(_cargoController.text.trim());
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    final confirm = _confirmController.text.trim();
-
-    if (nombre.isEmpty ||
-        rut.isEmpty ||
-        cargo.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirm.isEmpty) {
-      setState(() => _error = 'Completa todos los campos');
-      return;
-    }
-    if (password != confirm) {
-      setState(() => _error = 'Las contraseñas no coinciden');
-      return;
-    }
 
     setState(() {
       _loading = true;
@@ -51,45 +66,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final perfilesRef = FirebaseFirestore.instance.collection('perfiles');
-
-      // 🔹 Contar cuántos usuarios existen
-      int totalUsuarios;
-      try {
-        // Método moderno (requiere SDK Firestore 4.8.0+)
-        final countSnap = await perfilesRef.count().get();
-        totalUsuarios = countSnap.count ?? 0;
-      } catch (_) {
-        // Fallback si count() no está disponible
-        final snap = await perfilesRef.get();
-        totalUsuarios = snap.docs.length;
-      }
-
-      // 🔹 Asignar rol
-      final rol = totalUsuarios < 3 ? 'admin' : 'usuario';
-
-      // 🔹 Crear usuario en Auth
-      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      await _authService.registerUser(
+        nombre: nombre,
+        rut: rut,
+        cargo: cargo,
         email: email,
         password: password,
       );
-
-      // 🔹 Guardar datos adicionales en Firestore
-      await perfilesRef.doc(cred.user!.uid).set({
-        'nombre': nombre,
-        'rut': rut,
-        'cargo': cargo,
-        'email': email,
-        'rol': rol,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/login');
-    } on FirebaseAuthException catch (e) {
-      setState(() => _error = e.message);
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -97,14 +84,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDisabled = _nombreController.text.trim().isEmpty ||
-        _rutController.text.trim().isEmpty ||
-        _cargoController.text.trim().isEmpty ||
-        _emailController.text.trim().isEmpty ||
-        _passwordController.text.trim().isEmpty ||
-        _confirmController.text.trim().isEmpty ||
-        _loading;
-
     return Scaffold(
       backgroundColor: AppColors.negro,
       appBar: AppBar(
@@ -121,74 +100,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
 
-                // Nombre
-                TextField(
+                CustomTextField(
                   controller: _nombreController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration('Nombre completo'),
+                  label: 'Nombre completo',
+                  borderColor: _nombreController.text.isEmpty
+                      ? null
+                      : _nombreValid
+                          ? Colors.green
+                          : Colors.red,
                 ),
                 const SizedBox(height: 16),
 
-                // RUT
-                TextField(
+                RutField(
                   controller: _rutController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration('RUT'),
+                  isValid: _rutValid,
                 ),
                 const SizedBox(height: 16),
 
-                // Cargo
-                TextField(
+                CustomTextField(
                   controller: _cargoController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration('Cargo'),
+                  label: 'Cargo',
+                  borderColor: _cargoController.text.isEmpty
+                      ? null
+                      : _cargoValid
+                          ? Colors.green
+                          : Colors.red,
                 ),
                 const SizedBox(height: 16),
 
-                // Email
-                TextField(
+                EmailField(
                   controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration('Correo electrónico'),
+                  isValid: _emailValid,
                 ),
                 const SizedBox(height: 16),
 
-                // Contraseña
-                TextField(
+                PasswordField(
                   controller: _passwordController,
-                  obscureText: _obscurePass,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration('Contraseña').copyWith(
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePass ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.white70,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePass = !_obscurePass),
-                    ),
-                  ),
+                  label: 'Contraseña',
+                  obscure: _obscurePass,
+                  onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
+                  isValid: _passValid,
+                  helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
                 ),
                 const SizedBox(height: 16),
 
-                // Confirmar contraseña
-                TextField(
+                PasswordField(
                   controller: _confirmController,
-                  obscureText: _obscureConfirm,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _inputDecoration('Confirmar contraseña').copyWith(
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureConfirm
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                        color: Colors.white70,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
-                    ),
-                  ),
+                  label: 'Confirmar contraseña',
+                  obscure: _obscureConfirm,
+                  onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  isValid: _confirmValid,
+                  helperText: _confirmController.text.isEmpty
+                      ? ''
+                      : _confirmValid
+                          ? 'Coincide con la contraseña'
+                          : 'Las contraseñas no coinciden',
                 ),
                 const SizedBox(height: 12),
 
@@ -198,7 +164,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: const TextStyle(color: Colors.redAccent),
                     textAlign: TextAlign.center,
                   ),
-
                 const SizedBox(height: 24),
 
                 ElevatedButton(
@@ -210,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: isDisabled ? null : _register,
+                  onPressed: (!_formValid || _loading) ? null : _register,
                   child: _loading
                       ? const SizedBox(
                           height: 22,
@@ -223,25 +188,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       : const Text(
                           'Crear cuenta',
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white70),
-      filled: true,
-      fillColor: Colors.white10,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
       ),
     );
   }

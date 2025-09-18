@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
+import '../auth/services/auth_service.dart';
+import '../auth/widgets/email_field.dart';
+import '../auth/widgets/password_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,17 +12,30 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _identificadorController = TextEditingController(); // Email o RUT
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  final _authService = AuthService();
+
   bool _loading = false;
   String? _error;
-  bool _obscure = true;
+  bool _obscurePass = true;
+
+  bool _emailValid = false;
+  bool _passValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(() => setState(() => _emailValid = _authService.isValidEmail(_emailController.text.trim())));
+    _passwordController.addListener(() => setState(() => _passValid = _authService.isValidPassword(_passwordController.text.trim())));
+  }
+
+  bool get _formValid => _emailValid && _passValid;
 
   Future<void> _login() async {
-    final identificador = _identificadorController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-
-    if (identificador.isEmpty || password.isEmpty) return;
 
     setState(() {
       _loading = true;
@@ -29,38 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      String emailToLogin = identificador;
-
-      // Si no contiene '@', asumimos que es RUT y buscamos en Firestore
-      if (!identificador.contains('@')) {
-        final perfilesRef = FirebaseFirestore.instance.collection('perfiles');
-        final snap = await perfilesRef
-            .where('rut', isEqualTo: identificador.toUpperCase())
-            .limit(1)
-            .get();
-
-        if (snap.docs.isEmpty) {
-          throw Exception('No existe usuario con ese RUT');
-        }
-
-        final data = snap.docs.first.data();
-        final email = (data['email'] ?? '').toString().trim();
-        if (email.isEmpty) {
-          throw Exception('El usuario con ese RUT no tiene email registrado');
-        }
-        emailToLogin = email;
-      }
-
-      // Autenticación con email obtenido o ingresado
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailToLogin,
-        password: password,
-      );
-
+      await _authService.loginUser(email: email, password: password);
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } on FirebaseAuthException catch (e) {
-      setState(() => _error = e.message);
+      Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
@@ -70,12 +55,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDisabled = _identificadorController.text.trim().isEmpty ||
-        _passwordController.text.trim().isEmpty ||
-        _loading;
-
     return Scaffold(
       backgroundColor: AppColors.negro,
+      appBar: AppBar(
+        backgroundColor: AppColors.negro,
+        title: const Text('Iniciar sesión'),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -83,58 +68,22 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
 
-                Text(
-                  'Iniciar Sesión',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: AppColors.rojo,
-                        fontWeight: FontWeight.bold,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-
-                // Campo Email o RUT
-                TextField(
-                  controller: _identificadorController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Email o RUT',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    filled: true,
-                    fillColor: Colors.white10,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                EmailField(
+                  controller: _emailController,
+                  isValid: _emailValid,
                 ),
                 const SizedBox(height: 16),
 
-                // Campo Contraseña
-                TextField(
+                PasswordField(
                   controller: _passwordController,
-                  obscureText: _obscure,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Contraseña',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    filled: true,
-                    fillColor: Colors.white10,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscure ? Icons.visibility : Icons.visibility_off,
-                        color: Colors.white70,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                  ),
-                  onSubmitted: (_) => _login(),
+                  label: 'Contraseña',
+                  obscure: _obscurePass,
+                  onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
+                  isValid: _passValid,
+                  helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
                 ),
                 const SizedBox(height: 12),
 
@@ -144,7 +93,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: const TextStyle(color: Colors.redAccent),
                     textAlign: TextAlign.center,
                   ),
-
                 const SizedBox(height: 24),
 
                 ElevatedButton(
@@ -156,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: isDisabled ? null : _login,
+                  onPressed: (!_formValid || _loading) ? null : _login,
                   child: _loading
                       ? const SizedBox(
                           height: 22,
@@ -167,25 +115,20 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : const Text(
-                          'Ingresar',
+                          'Iniciar sesión',
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
 
-                const SizedBox(height: 12),
-
-                // Enlace a registro
+                const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/registro');
-                  },
+                  onPressed: () => Navigator.pushNamed(context, '/register'),
                   child: const Text(
-                    '¿No tienes cuenta? Crea una',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
+                    '¿No tienes cuenta? Regístrate',
+                    style: TextStyle(color: Colors.white70),
                   ),
                 ),
               ],

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
+import '../auth/login_screen.dart';
 
 class VerUsuariosScreen extends StatefulWidget {
   const VerUsuariosScreen({super.key});
@@ -10,7 +13,7 @@ class VerUsuariosScreen extends StatefulWidget {
 }
 
 class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
-  late Future<List<Map<String, dynamic>>> _usuariosFuture;
+  late Future<List<Map<String, dynamic>>> _usuariosFuture = Future.value([]);
   List<Map<String, dynamic>> _usuarios = [];
   List<Map<String, dynamic>> _filtrados = [];
   final TextEditingController _searchCtrl = TextEditingController();
@@ -18,7 +21,43 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   @override
   void initState() {
     super.initState();
-    _usuariosFuture = _cargarUsuarios();
+    _verificarAdmin();
+  }
+
+  Future<void> _verificarAdmin() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _redirigirALogin('Debes iniciar sesión como administrador');
+      return;
+    }
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('perfiles')
+          .doc(user.uid)
+          .get();
+      final rol = (doc.data()?['rol'] ?? '').toString().trim().toLowerCase();
+      if (rol != 'admin') {
+        _redirigirALogin('No tienes permisos de administrador');
+        return;
+      }
+      setState(() {
+        _usuariosFuture = _cargarUsuarios();
+      });
+    } catch (e) {
+      _redirigirALogin('Error verificando permisos: $e');
+    }
+  }
+
+  void _redirigirALogin(String mensaje) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mensaje)),
+      );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
   }
 
   Future<List<Map<String, dynamic>>> _cargarUsuarios() async {
@@ -26,7 +65,6 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         .collection('perfiles')
         .where('rol', isEqualTo: 'usuario')
         .get();
-
     final lista = snap.docs.map((d) {
       final data = d.data();
       return {
@@ -37,7 +75,6 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         'rol': data['rol'] ?? '',
       };
     }).toList();
-
     _usuarios = lista;
     _filtrados = lista;
     return lista;
@@ -71,7 +108,8 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Eliminar usuario'),
-        content: const Text('¿Seguro que quieres eliminar este usuario?'),
+        content: const Text(
+            '¿Seguro que quieres eliminar este usuario? Esto borrará su cuenta y su perfil.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -85,10 +123,29 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         ],
       ),
     );
-
-    if (confirmar == true) {
-      await FirebaseFirestore.instance.collection('perfiles').doc(id).delete();
-      _refrescar();
+    if (confirmar != true) return;
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('eliminarUsuario')
+          .call({'uid': id});
+      await _refrescar();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario eliminado correctamente')),
+        );
+      }
+    } on FirebaseFunctionsException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.message}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error inesperado: $e')),
+        );
+      }
     }
   }
 

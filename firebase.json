@@ -1,1 +1,41 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"riesgosapp-5f8b5","appId":"1:526077789637:android:a86999983c1fdbce0d77ac","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"riesgosapp-5f8b5","configurations":{"android":"1:526077789637:android:a86999983c1fdbce0d77ac","ios":"1:526077789637:ios:e566c12ce8d37d320d77ac","macos":"1:526077789637:ios:e566c12ce8d37d320d77ac","web":"1:526077789637:web:9dd68d028a6108cf0d77ac","windows":"1:526077789637:web:bbdc1d1ed64701dd0d77ac"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "riesgosapp-5f8b5",
+          "appId": "1:526077789637:android:a86999983c1fdbce0d77ac",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "riesgosapp-5f8b5",
+          "configurations": {
+            "android": "1:526077789637:android:a86999983c1fdbce0d77ac",
+            "ios": "1:526077789637:ios:e566c12ce8d37d320d77ac",
+            "macos": "1:526077789637:ios:e566c12ce8d37d320d77ac",
+            "web": "1:526077789637:web:9dd68d028a6108cf0d77ac",
+            "windows": "1:526077789637:web:bbdc1d1ed64701dd0d77ac"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint"
+      ]
+    }
+  ]
+}
