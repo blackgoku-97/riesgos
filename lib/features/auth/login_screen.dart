@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await _authService.loginUser(email: email, password: password);
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, '/dashboard');
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
