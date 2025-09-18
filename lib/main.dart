@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
+
 import 'features/welcome/welcome_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
@@ -9,6 +10,7 @@ import 'features/dashboard/dashboard_screen.dart';
 import 'features/planificacion/crear_planificacion_screen.dart';
 import 'features/planificacion/historial_planificacion_screen.dart';
 import 'features/planificacion/duplicar_planificacion_screen.dart';
+import 'features/users/ver_usuarios_screen.dart'; // 👈 Importa la nueva pantalla
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,14 +38,15 @@ class MyApp extends StatelessWidget {
         '/historial_planificaciones': (context) =>
             const HistorialPlanificacionesScreen(),
         '/duplicar_planificacion': (context) {
-          final args =
-              ModalRoute.of(context)!.settings.arguments
-                  as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>;
           return DuplicarPlanificacionScreen(
             data: args['data'],
-            origenId: args['origenId'], planificacion: {},
+            origenId: args['origenId'],
+            planificacion: {},
           );
         },
+        '/ver_usuarios': (context) => const VerUsuariosScreen(), // 👈 Ruta nueva
       },
     );
   }
