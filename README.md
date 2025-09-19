@@ -22,3 +22,25 @@ Incluye gestión de usuarios con roles, creación y duplicación de planificacio
 - **Funciones Cloud** para operaciones seguras.
 
 ---
+
+## 🛠️ Requisitos previos
+
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.x o superior)
+- [Dart SDK](https://dart.dev/get-dart)
+- Cuenta en [Firebase](https://firebase.google.com/)
+- Proyecto de Firebase configurado con:
+  - **Authentication** (Email/Password)
+  - **Cloud Firestore**
+  - **Firebase Storage**
+  - **Cloud Functions**
+
+---
+
+## 👥 Roles y permisos
+- 	Admin
+- 	Acceso a gestión de usuarios.
+- 	Puede ver y eliminar cualquier planificación.
+- 	Puede calcular y modificar nivel de riesgo.
+- 	Usuario
+- 	Solo puede crear y ver sus propias planificaciones.
+- 	No puede acceder a gestión de usuarios.
