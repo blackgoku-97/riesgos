@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 
 class UserListTile extends StatelessWidget {
   final Map<String, dynamic> usuario;
@@ -16,42 +15,30 @@ class UserListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: AppColors.rojo,
-        child: Text(
-          usuario['nombre'].isNotEmpty
-              ? usuario['nombre'][0].toUpperCase()
-              : '?',
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
+      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       title: Text(
-        usuario['nombre'].isNotEmpty ? usuario['nombre'] : usuario['email'],
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        usuario['nombre'] ?? '',
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${usuario['cargo']} • ${usuario['rol']}'.trim(),
-            style: TextStyle(color: Colors.grey.shade700),
-          ),
-          if (usuario['email'].isNotEmpty)
-            Text(
-              usuario['email'],
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
+          Text('Cargo: ${usuario['cargo'] ?? ''}'),
+          Text('Email: ${usuario['email'] ?? ''}'),
+          Text('RUT: ${usuario['rut'] ?? ''}'),
         ],
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
+      trailing: Wrap(
+        spacing: 8,
         children: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.blue),
+            tooltip: 'Editar',
             onPressed: onEdit,
           ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
+            tooltip: 'Eliminar',
             onPressed: onDelete,
           ),
         ],

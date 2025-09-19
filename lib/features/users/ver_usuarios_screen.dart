@@ -81,7 +81,10 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       };
     }).toList();
 
-    lista.sort((a, b) => a['nombre'].toString().toLowerCase().compareTo(b['nombre'].toString().toLowerCase()));
+    lista.sort((a, b) => a['nombre']
+        .toString()
+        .toLowerCase()
+        .compareTo(b['nombre'].toString().toLowerCase()));
 
     _usuarios = lista;
     _filtrados = lista;
@@ -99,7 +102,10 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           final cargo = (u['cargo'] ?? '').toString().toLowerCase();
           final email = (u['email'] ?? '').toString().toLowerCase();
           final rut = (u['rut'] ?? '').toString().toLowerCase();
-          return nombre.contains(q) || cargo.contains(q) || email.contains(q) || rut.contains(q);
+          return nombre.contains(q) ||
+              cargo.contains(q) ||
+              email.contains(q) ||
+              rut.contains(q);
         }).toList();
       });
     }
@@ -156,6 +162,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           .update({
         'nombre': resultado['nombre']!,
         'cargo': resultado['cargo']!,
+        'rut': resultado['rut']!,
       });
       _refrescar();
     }
