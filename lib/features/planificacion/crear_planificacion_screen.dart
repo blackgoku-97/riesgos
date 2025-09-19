@@ -11,7 +11,6 @@ import '../planificacion/services/imagen_service.dart';
 import '../planificacion/services/storage_service.dart';
 
 import '../planificacion/constants/opciones_area.dart';
-
 import '../planificacion/widgets/selector_dropdown.dart';
 import '../planificacion/widgets/selector_peligros.dart';
 import '../planificacion/widgets/frecuencia_severidad_fields.dart';
@@ -27,19 +26,16 @@ class CrearPlanificacionScreen extends StatefulWidget {
 
 class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
   final _planTrabajoCtrl = TextEditingController();
-  String? _areaSel;
-  String? _procesoSel;
-  String? _actividadSel;
-  final List<String> _peligrosSel = [];
-  final List<String> _agenteSel = [];
-  final List<String> _medidasSel = [];
-  int? _frecuencia;
-  int? _severidad;
-  String? _riesgoAuto;
+  String? _areaSel, _procesoSel, _actividadSel, _rol, _riesgoAuto;
+  final _peligrosSel = <String>[];
+  final _agenteSel = <String>[];
+  final _medidasSel = <String>[];
+  int? _frecuencia, _severidad;
   File? _imagen;
-  String? _rol;
   LatLng? _ubicacion;
   bool _guardando = false;
+
+  final espacio = const SizedBox(height: 12);
 
   @override
   void initState() {
@@ -50,14 +46,12 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
 
   Future<void> _cargarRol() async {
     final rol = await PerfilService.obtenerRolUsuario();
-    if (!mounted) return;
-    setState(() => _rol = rol);
+    if (mounted) setState(() => _rol = rol);
   }
 
   Future<void> _obtenerUbicacion() async {
     final ubic = await UbicacionService.obtenerUbicacion(context);
-    if (!mounted) return;
-    if (ubic != null) setState(() => _ubicacion = ubic);
+    if (mounted && ubic != null) setState(() => _ubicacion = ubic);
   }
 
   void _calcularRiesgo() {
@@ -70,8 +64,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
 
   Future<void> _tomarFoto() async {
     final img = await ImagenService.tomarFoto();
-    if (!mounted) return;
-    if (img != null) setState(() => _imagen = img);
+    if (mounted && img != null) setState(() => _imagen = img);
   }
 
   Future<void> _guardar() async {
@@ -89,13 +82,11 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
       severidad: _severidad,
       imagen: _imagen,
     );
-    if (error != null) {
-      SnackService.mostrar(context, error);
-      return;
-    }
+    if (error != null) return SnackService.mostrar(context, error);
+
     setState(() => _guardando = true);
-    String? urlImagen;
     try {
+      String? urlImagen;
       if (_imagen != null) {
         final path = 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg';
         urlImagen = await StorageService.uploadFile(file: _imagen!, path: path);
@@ -118,10 +109,46 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
       SnackService.mostrar(context, 'Planificación guardada con éxito', success: true);
       Navigator.pop(context, true);
     } catch (e) {
-      if (!mounted) return;
-      SnackService.mostrar(context, 'Error al guardar: $e');
-      setState(() => _guardando = false);
+      if (mounted) {
+        SnackService.mostrar(context, 'Error al guardar: $e');
+        setState(() => _guardando = false);
+      }
     }
+  }
+
+  Widget _buildDropdown(String label, String? value, List<String> opciones, ValueChanged<String?> onChanged) {
+    if (opciones.isEmpty) return const SizedBox.shrink();
+    return Column(
+      children: [
+        espacio,
+        SelectorDropdown<String>(
+          label: label,
+          value: value,
+          opciones: opciones,
+          getLabel: (v) => v,
+          onChanged: onChanged,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPeligros(String label, List<String> opciones, List<String> seleccionados, ValueChanged<List<String>> onChanged) {
+    if (opciones.isEmpty) return const SizedBox.shrink();
+    return Column(
+      children: [
+        espacio,
+        SelectorPeligros(
+          label: label,
+          opciones: opciones,
+          seleccionados: seleccionados,
+          onChanged: (sel) => setState(() {
+            seleccionados
+              ..clear()
+              ..addAll(sel);
+          }),
+        ),
+      ],
+    );
   }
 
   @override
@@ -130,6 +157,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
       (a) => a.label == _areaSel,
       orElse: () => Area.seleccionar,
     );
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crear planificación'),
@@ -152,7 +180,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
+            espacio,
             SelectorDropdown<String>(
               label: 'Área',
               value: _areaSel,
@@ -168,53 +196,11 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
                 });
               },
             ),
-            if (opcionesProceso[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorDropdown<String>(
-                label: 'Proceso',
-                value: _procesoSel,
-                opciones: opcionesProceso[areaEnum]!,
-                getLabel: (v) => v,
-                onChanged: (v) => setState(() => _procesoSel = v),
-              ),
-            ],
-            if (opcionesActividad[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorDropdown<String>(
-                label: 'Actividad',
-                value: _actividadSel,
-                opciones: opcionesActividad[areaEnum]!,
-                getLabel: (v) => v,
-                onChanged: (v) => setState(() => _actividadSel = v),
-              ),
-            ],
-            if (opcionesPeligro[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorPeligros(
-                label: 'Peligros',
-                opciones: opcionesPeligro[areaEnum]!,
-                seleccionados: _peligrosSel,
-                onChanged: (sel) => setState(() {
-                  _peligrosSel
-                    ..clear()
-                    ..addAll(sel);
-                }),
-              ),
-            ],
-            if (opcionesAgenteMaterial[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorPeligros(
-                label: 'Agente material',
-                opciones: opcionesAgenteMaterial[areaEnum]!,
-                seleccionados: _agenteSel,
-                onChanged: (sel) => setState(() {
-                  _agenteSel
-                    ..clear()
-                    ..addAll(sel);
-                }),
-              ),
-            ],
-            const SizedBox(height: 12),
+            _buildDropdown('Proceso', _procesoSel, opcionesProceso[areaEnum]!, (v) => setState(() => _procesoSel = v)),
+            _buildDropdown('Actividad', _actividadSel, opcionesActividad[areaEnum]!, (v) => setState(() => _actividadSel = v)),
+            _buildPeligros('Peligros', opcionesPeligro[areaEnum]!, _peligrosSel, (_) {}),
+            _buildPeligros('Agente material', opcionesAgenteMaterial[areaEnum]!, _agenteSel, (_) {}),
+            espacio,
             SelectorPeligros(
               label: 'Medidas',
               opciones: opcionesMedidas,
@@ -226,7 +212,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
               }),
             ),
             if (_rol == 'admin') ...[
-              const SizedBox(height: 12),
+              espacio,
               FrecuenciaSeveridadFields(
                 frecuencia: _frecuencia,
                 severidad: _severidad,
@@ -243,7 +229,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
             ],
             const SizedBox(height: 8),
             MapaUbicacion(ubicacion: _ubicacion),
-            const SizedBox(height: 12),
+            espacio,
             if (_imagen != null)
               Image.file(_imagen!, height: 160, fit: BoxFit.cover),
             OutlinedButton.icon(
