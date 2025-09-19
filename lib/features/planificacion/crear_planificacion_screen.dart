@@ -10,12 +10,7 @@ import '../planificacion/services/snack_service.dart';
 import '../planificacion/services/imagen_service.dart';
 import '../planificacion/services/storage_service.dart';
 
-import '../planificacion/constants/opciones_area.dart';
-import '../planificacion/widgets/selector_dropdown.dart';
-import '../planificacion/widgets/selector_peligros.dart';
-import '../planificacion/widgets/frecuencia_severidad_fields.dart';
-import '../planificacion/widgets/mapa_ubicacion.dart';
-import '../planificacion/widgets/guardar_button.dart';
+import '../planificacion/widgets/formulario_planificacion.dart';
 
 class CrearPlanificacionScreen extends StatefulWidget {
   const CrearPlanificacionScreen({super.key});
@@ -26,7 +21,7 @@ class CrearPlanificacionScreen extends StatefulWidget {
 
 class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
   final _planTrabajoCtrl = TextEditingController();
-  String? _areaSel, _procesoSel, _actividadSel, _rol, _riesgoAuto;
+  String? _areaSel, _procesoSel, _actividadSel, _rol, _cargo, _riesgoAuto;
   final _peligrosSel = <String>[];
   final _agenteSel = <String>[];
   final _medidasSel = <String>[];
@@ -35,19 +30,26 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
   LatLng? _ubicacion;
   bool _guardando = false;
 
-  final espacio = const SizedBox(height: 12);
-  final espacio8 = const SizedBox(height: 8);
-
   @override
   void initState() {
     super.initState();
-    _cargarRol();
+    _cargarPerfil();
     _obtenerUbicacion();
   }
 
-  Future<void> _cargarRol() async {
-    final rol = await PerfilService.obtenerRolUsuario();
-    if (mounted) setState(() => _rol = rol);
+  @override
+  void dispose() {
+    _planTrabajoCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _cargarPerfil() async {
+    final perfil = await PerfilService.obtenerPerfilUsuario();
+    if (!mounted) return;
+    setState(() {
+      _rol = (perfil?['rol'] as String?)?.trim().toLowerCase();
+      _cargo = (perfil?['cargo'] as String?)?.trim();
+    });
   }
 
   Future<void> _obtenerUbicacion() async {
@@ -68,11 +70,21 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
     if (mounted && img != null) setState(() => _imagen = img);
   }
 
-  Future<void> _guardar() async {
-    if (_rol == null || _ubicacion == null) {
-      return SnackService.mostrar(context, 'No se pudo obtener el rol o la ubicación');
-    }
+  void _updateList(List<String> target, List<String> source) {
+    setState(() {
+      target
+        ..clear()
+        ..addAll(source);
+    });
+  }
 
+  Future<void> _guardar() async {
+    final cargo = _cargo;
+    final rol = _rol;
+    final ubicacion = _ubicacion;
+    if (rol == null || ubicacion == null || cargo == null) {
+      return SnackService.mostrar(context, 'No se pudo obtener el rol, cargo o la ubicación');
+    }
     final error = ValidacionService.validar(
       plan: _planTrabajoCtrl.text,
       area: _areaSel,
@@ -81,22 +93,25 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
       peligros: _peligrosSel,
       agenteMaterial: _agenteSel,
       medidas: _medidasSel,
-      ubicacion: _ubicacion,
-      rol: _rol,
+      ubicacion: ubicacion,
+      rol: rol,
+      cargo: cargo,
       frecuencia: _frecuencia,
       severidad: _severidad,
       imagen: _imagen,
     );
     if (error != null) return SnackService.mostrar(context, error);
-
     setState(() => _guardando = true);
     try {
-      String? urlImagen;
-      if (_imagen != null) {
-        final path = 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg';
-        urlImagen = await StorageService.uploadFile(file: _imagen!, path: path);
-      }
+      final urlImagen = _imagen != null
+          ? await StorageService.uploadFile(
+              file: _imagen!,
+              path: 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg',
+            )
+          : null;
       await PlanificacionService.guardar(
+        cargo: cargo,
+        rol: rol,
         planTrabajo: _planTrabajoCtrl.text.trim(),
         area: _areaSel!,
         proceso: _procesoSel,
@@ -104,7 +119,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
         peligros: _peligrosSel,
         agenteMaterial: _agenteSel,
         medidas: _medidasSel,
-        ubicacion: _ubicacion!,
+        ubicacion: ubicacion,
         frecuencia: _frecuencia,
         severidad: _severidad,
         nivelRiesgo: _riesgoAuto,
@@ -121,48 +136,8 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
     }
   }
 
-  Widget _buildDropdown(String label, String? value, List<String> opciones, ValueChanged<String?> onChanged) {
-    if (opciones.isEmpty) return const SizedBox.shrink();
-    return Column(
-      children: [
-        espacio,
-        SelectorDropdown<String>(
-          label: label,
-          value: value,
-          opciones: opciones,
-          getLabel: (v) => v,
-          onChanged: onChanged,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPeligros(String label, List<String> opciones, List<String> seleccionados) {
-    if (opciones.isEmpty) return const SizedBox.shrink();
-    return Column(
-      children: [
-        espacio,
-        SelectorPeligros(
-          label: label,
-          opciones: opciones,
-          seleccionados: seleccionados,
-          onChanged: (sel) => setState(() {
-            seleccionados
-              ..clear()
-              ..addAll(sel);
-          }),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final areaEnum = opcionesArea.firstWhere(
-      (a) => a.label == _areaSel,
-      orElse: () => Area.seleccionar,
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crear planificación'),
@@ -176,80 +151,46 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            TextFormField(
-              controller: _planTrabajoCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Plan de trabajo',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            espacio,
-            SelectorDropdown<String>(
-              label: 'Área',
-              value: _areaSel,
-              opciones: opcionesArea.map((a) => a.label).toList(),
-              getLabel: (v) => v,
-              onChanged: (v) {
-                setState(() {
-                  _areaSel = v;
-                  _procesoSel = null;
-                  _actividadSel = null;
-                  _peligrosSel.clear();
-                  _agenteSel.clear();
-                });
-              },
-            ),
-            _buildDropdown('Proceso', _procesoSel, opcionesProceso[areaEnum]!, (v) => setState(() => _procesoSel = v)),
-            _buildDropdown('Actividad', _actividadSel, opcionesActividad[areaEnum]!, (v) => setState(() => _actividadSel = v)),
-            _buildPeligros('Peligros', opcionesPeligro[areaEnum]!, _peligrosSel),
-            _buildPeligros('Agente material', opcionesAgenteMaterial[areaEnum]!, _agenteSel),
-            espacio,
-            SelectorPeligros(
-              label: 'Medidas',
-              opciones: opcionesMedidas,
-              seleccionados: _medidasSel,
-              onChanged: (sel) => setState(() {
-                _medidasSel
-                  ..clear()
-                  ..addAll(sel);
-              }),
-            ),
-            if (_rol == 'admin') ...[
-              espacio,
-              FrecuenciaSeveridadFields(
-                frecuencia: _frecuencia,
-                severidad: _severidad,
-                nivelRiesgo: _riesgoAuto,
-                onFrecuenciaChanged: (v) {
-                  _frecuencia = v;
-                  _calcularRiesgo();
-                },
-                onSeveridadChanged: (v) {
-                  _severidad = v;
-                  _calcularRiesgo();
-                },
-              ),
-            ],
-            espacio8,
-            MapaUbicacion(ubicacion: _ubicacion),
-            espacio,
-            if (_imagen != null)
-              Image.file(_imagen!, height: 160, fit: BoxFit.cover),
-            OutlinedButton.icon(
-              onPressed: _tomarFoto,
-              icon: const Icon(Icons.camera_alt),
-              label: const Text('Tomar foto'),
-            ),
-            const SizedBox(height: 16),
-            GuardarButton(
-              loading: _guardando,
-              text: 'Guardar',
-              color: Theme.of(context).colorScheme.primary,
-              onPressed: _guardando ? () {} : _guardar,
-            ),
-          ],
+        child: FormularioPlanificacion(
+          cargo: _cargo,
+          rol: _rol,
+          planTrabajoCtrl: _planTrabajoCtrl,
+          areaSel: _areaSel,
+          procesoSel: _procesoSel,
+          actividadSel: _actividadSel,
+          peligrosSel: _peligrosSel,
+          agenteSel: _agenteSel,
+          medidasSel: _medidasSel,
+          frecuencia: _frecuencia,
+          severidad: _severidad,
+          riesgoAuto: _riesgoAuto,
+          imagen: _imagen,
+          ubicacion: _ubicacion,
+          guardando: _guardando,
+          onTomarFoto: _tomarFoto,
+          onGuardar: _guardar,
+          onAreaChanged: (v) {
+            setState(() {
+              _areaSel = v;
+              _procesoSel = null;
+              _actividadSel = null;
+              _peligrosSel.clear();
+              _agenteSel.clear();
+            });
+          },
+          onProcesoChanged: (v) => setState(() => _procesoSel = v),
+          onActividadChanged: (v) => setState(() => _actividadSel = v),
+          onPeligrosChanged: (sel) => _updateList(_peligrosSel, sel),
+          onAgenteChanged: (sel) => _updateList(_agenteSel, sel),
+          onMedidasChanged: (sel) => _updateList(_medidasSel, sel),
+          onFrecuenciaChanged: (v) {
+            _frecuencia = v;
+            _calcularRiesgo();
+          },
+          onSeveridadChanged: (v) {
+            _severidad = v;
+            _calcularRiesgo();
+          },
         ),
       ),
     );

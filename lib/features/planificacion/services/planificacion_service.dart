@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 class PlanificacionService {
   static Future<void> guardar({
+    required String cargo,        // nuevo
+    required String? rol,         // nuevo
     required String planTrabajo,
     required String area,
     String? proceso,
@@ -37,6 +39,8 @@ class PlanificacionService {
       'año': anio,
       'fechaPlanificacionLocal':
           DateFormat('dd/MM/yyyy', 'es_CL').format(DateTime.now()),
+      'cargo': cargo,        // nuevo
+      'rol': rol,            // nuevo
       'planTrabajo': planTrabajo,
       'area': area,
       'proceso': proceso,

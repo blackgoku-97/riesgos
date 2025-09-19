@@ -10,17 +10,10 @@ import '../planificacion/services/snack_service.dart';
 import '../planificacion/services/imagen_service.dart';
 import '../planificacion/services/storage_service.dart';
 
-import '../planificacion/constants/opciones_area.dart';
-
-import '../planificacion/widgets/selector_dropdown.dart';
-import '../planificacion/widgets/selector_peligros.dart';
-import '../planificacion/widgets/frecuencia_severidad_fields.dart';
-import '../planificacion/widgets/mapa_ubicacion.dart';
-import '../planificacion/widgets/guardar_button.dart';
+import '../planificacion/widgets/formulario_planificacion.dart';
 
 class DuplicarPlanificacionScreen extends StatefulWidget {
   final Map<String, dynamic> planificacion;
-
   const DuplicarPlanificacionScreen({super.key, required this.planificacion, required data, required origenId});
 
   @override
@@ -29,17 +22,10 @@ class DuplicarPlanificacionScreen extends StatefulWidget {
 
 class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScreen> {
   late TextEditingController _planTrabajoCtrl;
-  String? _areaSel;
-  String? _procesoSel;
-  String? _actividadSel;
-  late List<String> _peligrosSel;
-  late List<String> _agenteSel;
-  late List<String> _medidasSel;
-  int? _frecuencia;
-  int? _severidad;
-  String? _riesgoAuto;
+  String? _areaSel, _procesoSel, _actividadSel, _rol, _cargo, _riesgoAuto;
+  late List<String> _peligrosSel, _agenteSel, _medidasSel;
+  int? _frecuencia, _severidad;
   File? _imagen;
-  String? _rol;
   LatLng? _ubicacion;
   bool _guardando = false;
 
@@ -61,20 +47,22 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
       final u = p['ubicacion'];
       _ubicacion = LatLng(u.latitude, u.longitude);
     }
-    _cargarRol();
+    _cargarPerfil();
     if (_ubicacion == null) _obtenerUbicacion();
   }
 
-  Future<void> _cargarRol() async {
-    final rol = await PerfilService.obtenerRolUsuario();
+  Future<void> _cargarPerfil() async {
+    final perfil = await PerfilService.obtenerPerfilUsuario();
     if (!mounted) return;
-    setState(() => _rol = rol);
+    setState(() {
+      _rol = (perfil?['rol'] as String?)?.trim().toLowerCase();
+      _cargo = (perfil?['cargo'] as String?)?.trim();
+    });
   }
 
   Future<void> _obtenerUbicacion() async {
     final ubic = await UbicacionService.obtenerUbicacion(context);
-    if (!mounted) return;
-    if (ubic != null) setState(() => _ubicacion = ubic);
+    if (mounted && ubic != null) setState(() => _ubicacion = ubic);
   }
 
   void _calcularRiesgo() {
@@ -87,11 +75,24 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
 
   Future<void> _tomarFoto() async {
     final img = await ImagenService.tomarFoto();
-    if (!mounted) return;
-    if (img != null) setState(() => _imagen = img);
+    if (mounted && img != null) setState(() => _imagen = img);
+  }
+
+  void _updateList(List<String> target, List<String> source) {
+    setState(() {
+      target
+        ..clear()
+        ..addAll(source);
+    });
   }
 
   Future<void> _guardar() async {
+    final cargo = _cargo;
+    final rol = _rol;
+    final ubicacion = _ubicacion;
+    if (rol == null || ubicacion == null || cargo == null) {
+      return SnackService.mostrar(context, 'No se pudo obtener el rol, cargo o la ubicación');
+    }
     final error = ValidacionService.validar(
       plan: _planTrabajoCtrl.text,
       area: _areaSel,
@@ -100,25 +101,26 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
       peligros: _peligrosSel,
       agenteMaterial: _agenteSel,
       medidas: _medidasSel,
-      ubicacion: _ubicacion,
-      rol: _rol,
+      ubicacion: ubicacion,
+      rol: rol,
+      cargo: cargo,
       frecuencia: _frecuencia,
       severidad: _severidad,
       imagen: _imagen ?? (widget.planificacion['urlImagen'] != null ? File('') : null),
     );
-    if (error != null) {
-      SnackService.mostrar(context, error);
-      return;
-    }
+    if (error != null) return SnackService.mostrar(context, error);
     setState(() => _guardando = true);
-
-    String? urlImagen = widget.planificacion['urlImagen'];
     try {
+      String? urlImagen = widget.planificacion['urlImagen'];
       if (_imagen != null) {
-        final path = 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg';
-        urlImagen = await StorageService.uploadFile(file: _imagen!, path: path);
+        urlImagen = await StorageService.uploadFile(
+          file: _imagen!,
+          path: 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg',
+        );
       }
       await PlanificacionService.guardar(
+        cargo: cargo,
+        rol: rol,
         planTrabajo: _planTrabajoCtrl.text.trim(),
         area: _areaSel!,
         proceso: _procesoSel,
@@ -126,7 +128,7 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
         peligros: _peligrosSel,
         agenteMaterial: _agenteSel,
         medidas: _medidasSel,
-        ubicacion: _ubicacion!,
+        ubicacion: ubicacion,
         frecuencia: _frecuencia,
         severidad: _severidad,
         nivelRiesgo: _riesgoAuto,
@@ -136,19 +138,15 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
       SnackService.mostrar(context, 'Planificación duplicada con éxito', success: true);
       Navigator.pop(context, true);
     } catch (e) {
-      if (!mounted) return;
-      SnackService.mostrar(context, 'Error al duplicar: $e');
-      setState(() => _guardando = false);
+      if (mounted) {
+        SnackService.mostrar(context, 'Error al duplicar: $e');
+        setState(() => _guardando = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final areaEnum = opcionesArea.firstWhere(
-      (a) => a.label == _areaSel,
-      orElse: () => Area.seleccionar,
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Duplicar planificación'),
@@ -162,122 +160,46 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            TextFormField(
-              controller: _planTrabajoCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Plan de trabajo',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SelectorDropdown<String>(
-              label: 'Área',
-              value: _areaSel,
-              opciones: opcionesArea.map((a) => a.label).toList(),
-              getLabel: (v) => v,
-              onChanged: (v) {
-                setState(() {
-                  _areaSel = v;
-                  _procesoSel = null;
-                  _actividadSel = null;
-                  _peligrosSel.clear();
-                  _agenteSel.clear();
-                });
-              },
-            ),
-            if (opcionesProceso[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorDropdown<String>(
-                label: 'Proceso',
-                value: _procesoSel,
-                opciones: opcionesProceso[areaEnum]!,
-                getLabel: (v) => v,
-                onChanged: (v) => setState(() => _procesoSel = v),
-              ),
-            ],
-            if (opcionesActividad[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorDropdown<String>(
-                label: 'Actividad',
-                value: _actividadSel,
-                opciones: opcionesActividad[areaEnum]!,
-                getLabel: (v) => v,
-                onChanged: (v) => setState(() => _actividadSel = v),
-              ),
-            ],
-            if (opcionesPeligro[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorPeligros(
-                label: 'Peligros',
-                opciones: opcionesPeligro[areaEnum]!,
-                seleccionados: _peligrosSel,
-                onChanged: (sel) => setState(() {
-                  _peligrosSel
-                    ..clear()
-                    ..addAll(sel);
-                }),
-              ),
-            ],
-            if (opcionesAgenteMaterial[areaEnum]!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              SelectorPeligros(
-                label: 'Agente material',
-                opciones: opcionesAgenteMaterial[areaEnum]!,
-                seleccionados: _agenteSel,
-                onChanged: (sel) => setState(() {
-                  _agenteSel
-                    ..clear()
-                    ..addAll(sel);
-                }),
-              ),
-            ],
-            const SizedBox(height: 12),
-            SelectorPeligros(
-              label: 'Medidas',
-              opciones: opcionesMedidas,
-              seleccionados: _medidasSel,
-              onChanged: (sel) => setState(() {
-                _medidasSel
-                  ..clear()
-                  ..addAll(sel);
-              }),
-            ),
-            if (_rol == 'admin') ...[
-              const SizedBox(height: 12),
-              FrecuenciaSeveridadFields(
-                frecuencia: _frecuencia,
-                severidad: _severidad,
-                nivelRiesgo: _riesgoAuto,
-                onFrecuenciaChanged: (v) {
-                  _frecuencia = v;
-                  _calcularRiesgo();
-                },
-                onSeveridadChanged: (v) {
-                  _severidad = v;
-                  _calcularRiesgo();
-                },
-              ),
-            ],
-            const SizedBox(height: 8),
-            MapaUbicacion(ubicacion: _ubicacion),
-            const SizedBox(height: 12),
-            if (_imagen != null)
-              Image.file(_imagen!, height: 160, fit: BoxFit.cover),
-            OutlinedButton.icon(
-              onPressed: _tomarFoto,
-              icon: const Icon(Icons.camera_alt),
-              label: const Text('Tomar foto'),
-            ),
-            const SizedBox(height: 16),
-            GuardarButton(
-              loading: _guardando,
-              text: 'Duplicar',
-              color: Theme.of(context).colorScheme.primary,
-              onPressed: _guardando ? () {} : _guardar,
-            ),
-          ],
+        child: FormularioPlanificacion(
+          cargo: _cargo,
+          rol: _rol,
+          planTrabajoCtrl: _planTrabajoCtrl,
+          areaSel: _areaSel,
+          procesoSel: _procesoSel,
+          actividadSel: _actividadSel,
+          peligrosSel: _peligrosSel,
+          agenteSel: _agenteSel,
+          medidasSel: _medidasSel,
+          frecuencia: _frecuencia,
+          severidad: _severidad,
+          riesgoAuto: _riesgoAuto,
+          imagen: _imagen,
+          ubicacion: _ubicacion,
+          guardando: _guardando,
+          onTomarFoto: _tomarFoto,
+          onGuardar: _guardar,
+          onAreaChanged: (v) {
+            setState(() {
+              _areaSel = v;
+              _procesoSel = null;
+              _actividadSel = null;
+              _peligrosSel.clear();
+              _agenteSel.clear();
+            });
+          },
+          onProcesoChanged: (v) => setState(() => _procesoSel = v),
+          onActividadChanged: (v) => setState(() => _actividadSel = v),
+          onPeligrosChanged: (sel) => _updateList(_peligrosSel, sel),
+          onAgenteChanged: (sel) => _updateList(_agenteSel, sel),
+          onMedidasChanged: (sel) => _updateList(_medidasSel, sel),
+          onFrecuenciaChanged: (v) {
+            _frecuencia = v;
+            _calcularRiesgo();
+          },
+          onSeveridadChanged: (v) {
+            _severidad = v;
+            _calcularRiesgo();
+          },
         ),
       ),
     );
