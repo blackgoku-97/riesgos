@@ -1,16 +1,24 @@
-# gestion_riesgos
+# 📱 Gestión de Riesgos Laborales
 
-A new Flutter project.
+Aplicación móvil desarrollada en **Flutter** para la **planificación, control y seguimiento de riesgos laborales**.  
+Incluye gestión de usuarios con roles, creación y duplicación de planificaciones, historial con exportación a Excel/PDF, y validaciones en tiempo real.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Características principales
 
-A few resources to get you started if this is your first Flutter project:
+- **Autenticación con Firebase Auth** (email/contraseña).
+- **Roles de usuario**: `admin` y `usuario` con permisos diferenciados.
+- **Creación de planificaciones** con:
+  - Selección de área, proceso y actividad.
+  - Peligros, agentes materiales y medidas.
+  - Cálculo automático de nivel de riesgo (solo admin).
+  - Captura de ubicación GPS y fotografía.
+- **Duplicación** de planificaciones existentes.
+- **Historial** con filtro por año y exportación a Excel/PDF.
+- **Validaciones locales** (RUT, email, campos obligatorios) y visuales (bordes verdes/rojos).
+- **Almacenamiento de imágenes** en Firebase Storage.
+- **Base de datos en tiempo real** con Cloud Firestore.
+- **Funciones Cloud** para operaciones seguras.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
