@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class UserField extends StatelessWidget {
   final TextEditingController controller;
@@ -11,6 +12,25 @@ class UserField extends StatelessWidget {
     required this.isValid,
     this.label = 'Email o RUT',
   });
+
+  static bool quickValidate(String text, AuthService authService) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return false;
+
+    // Si contiene '@', asumimos que es email
+    if (trimmed.contains('@')) {
+      return authService.isValidEmail(trimmed);
+    }
+
+    // Si tiene formato de RUT básico (números + guion + dígito/K)
+    final rutPattern = RegExp(r'^\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]$');
+    if (rutPattern.hasMatch(trimmed)) {
+      return authService.isValidRUT(trimmed.toUpperCase());
+    }
+
+    // No es email ni RUT con formato válido
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {

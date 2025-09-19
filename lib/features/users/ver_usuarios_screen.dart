@@ -4,6 +4,10 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/theme/app_colors.dart';
 import '../auth/login_screen.dart';
+import 'widgets/user_list_tile.dart';
+import 'widgets/user_search_bar.dart';
+import 'widgets/user_edit_dialog.dart';
+import 'widgets/confirm_delete_dialog.dart';
 
 class VerUsuariosScreen extends StatefulWidget {
   const VerUsuariosScreen({super.key});
@@ -73,8 +77,12 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         'email': data['email'] ?? '',
         'cargo': data['cargo'] ?? '',
         'rol': data['rol'] ?? '',
+        'rut': data['rut'] ?? '',
       };
     }).toList();
+
+    lista.sort((a, b) => a['nombre'].toString().toLowerCase().compareTo(b['nombre'].toString().toLowerCase()));
+
     _usuarios = lista;
     _filtrados = lista;
     return lista;
@@ -89,7 +97,9 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         _filtrados = _usuarios.where((u) {
           final nombre = (u['nombre'] ?? '').toString().toLowerCase();
           final cargo = (u['cargo'] ?? '').toString().toLowerCase();
-          return nombre.contains(q) || cargo.contains(q);
+          final email = (u['email'] ?? '').toString().toLowerCase();
+          final rut = (u['rut'] ?? '').toString().toLowerCase();
+          return nombre.contains(q) || cargo.contains(q) || email.contains(q) || rut.contains(q);
         }).toList();
       });
     }
@@ -106,22 +116,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   Future<void> _eliminarUsuario(String id) async {
     final confirmar = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar usuario'),
-        content: const Text(
-            '¿Seguro que quieres eliminar este usuario? Esto borrará su cuenta y su perfil.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.rojo),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
+      builder: (_) => const ConfirmDeleteDialog(),
     );
     if (confirmar != true) return;
     try {
@@ -149,48 +144,18 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     }
   }
 
-  void _editarUsuario(Map<String, dynamic> usuario) async {
-    final nombreCtrl = TextEditingController(text: usuario['nombre']);
-    final cargoCtrl = TextEditingController(text: usuario['cargo']);
-
-    final guardar = await showDialog<bool>(
+  Future<void> _editarUsuario(Map<String, dynamic> usuario) async {
+    final resultado = await showDialog<Map<String, String>>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar usuario'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nombreCtrl,
-              decoration: const InputDecoration(labelText: 'Nombre'),
-            ),
-            TextField(
-              controller: cargoCtrl,
-              decoration: const InputDecoration(labelText: 'Cargo'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.rojo),
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
+      builder: (_) => UserEditDialog(usuario: usuario),
     );
-
-    if (guardar == true) {
+    if (resultado != null) {
       await FirebaseFirestore.instance
           .collection('perfiles')
           .doc(usuario['id'])
           .update({
-        'nombre': nombreCtrl.text.trim(),
-        'cargo': cargoCtrl.text.trim(),
+        'nombre': resultado['nombre']!,
+        'cargo': resultado['cargo']!,
       });
       _refrescar();
     }
@@ -216,7 +181,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           if (_filtrados.isEmpty) {
             return Column(
               children: [
-                _buildSearchBar(),
+                UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
                 const Expanded(
                   child: Center(child: Text('No hay usuarios registrados')),
                 ),
@@ -225,7 +190,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           }
           return Column(
             children: [
-              _buildSearchBar(),
+              UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: _refrescar,
@@ -235,37 +200,10 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final u = _filtrados[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.rojo,
-                          child: Text(
-                            u['nombre'].isNotEmpty
-                                ? u['nombre'][0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        title: Text(
-                          u['nombre'].isNotEmpty ? u['nombre'] : u['email'],
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(
-                          '${u['cargo']} • ${u['rol']}'.trim(),
-                          style: TextStyle(color: Colors.grey.shade700),
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _editarUsuario(u),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _eliminarUsuario(u['id']),
-                            ),
-                          ],
-                        ),
+                      return UserListTile(
+                        usuario: u,
+                        onEdit: () => _editarUsuario(u),
+                        onDelete: () => _eliminarUsuario(u['id']),
                       );
                     },
                   ),
@@ -274,23 +212,6 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: TextField(
-        controller: _searchCtrl,
-        onChanged: _filtrar,
-        decoration: InputDecoration(
-          hintText: 'Buscar por nombre o cargo...',
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-        ),
       ),
     );
   }

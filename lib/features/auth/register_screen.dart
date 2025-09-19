@@ -37,11 +37,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
-    _emailController.addListener(() => setState(() => _emailValid = _authService.isValidEmail(_emailController.text.trim())));
-    _rutController.addListener(() => setState(() => _rutValid = _authService.isValidRUT(_rutController.text.trim().toUpperCase())));
-    _passwordController.addListener(() => setState(() => _passValid = _authService.isValidPassword(_passwordController.text.trim())));
-    _nombreController.addListener(() => setState(() => _nombreValid = _authService.startsWithCapital(_nombreController.text.trim())));
-    _cargoController.addListener(() => setState(() => _cargoValid = _authService.startsWithCapital(_cargoController.text.trim())));
+
+    _emailController.addListener(() {
+      _emailValid = _authService.isValidEmail(_emailController.text.trim());
+      setState(() {});
+    });
+
+    _rutController.addListener(() {
+      final text = _rutController.text.trim().toUpperCase();
+      // Solo validar si parece un RUT (números + guion + dígito/K)
+      final rutPattern = RegExp(r'^\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]$');
+      _rutValid = rutPattern.hasMatch(text) && _authService.isValidRUT(text);
+      setState(() {});
+    });
+
+    _passwordController.addListener(() {
+      _passValid = _authService.isValidPassword(_passwordController.text.trim());
+      setState(() {});
+    });
+
+    _nombreController.addListener(() {
+      _nombreValid = _authService.startsWithCapital(_nombreController.text.trim());
+      setState(() {});
+    });
+
+    _cargoController.addListener(() {
+      _cargoValid = _authService.startsWithCapital(_cargoController.text.trim());
+      setState(() {});
+    });
+
     _confirmController.addListener(() => setState(() {}));
   }
 
@@ -54,6 +78,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _nombreValid && _rutValid && _cargoValid && _emailValid && _passValid && _confirmValid;
 
   Future<void> _register() async {
+    // Revalidar antes de enviar
+    if (!_formValid) {
+      setState(() => _error = 'Por favor, completa todos los campos correctamente.');
+      return;
+    }
+
     final nombre = _authService.capitalize(_nombreController.text.trim());
     final rut = _rutController.text.trim().toUpperCase();
     final cargo = _authService.capitalize(_cargoController.text.trim());
@@ -80,6 +110,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _rutController.dispose();
+    _cargoController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmController.dispose();
+    super.dispose();
   }
 
   @override

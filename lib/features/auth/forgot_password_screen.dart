@@ -23,14 +23,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void initState() {
     super.initState();
     _userController.addListener(() {
-      final text = _userController.text.trim();
-      _userValid = _authService.isValidEmail(text) || _authService.isValidRUT(text.toUpperCase());
+      _userValid = UserField.quickValidate(_userController.text, _authService);
       setState(() {});
     });
   }
 
+  @override
+  void dispose() {
+    _userController.dispose();
+    super.dispose();
+  }
+
   Future<void> _sendReset() async {
-    String userInput = _userController.text.trim();
+    final userInput = _userController.text.trim();
 
     setState(() {
       _loading = true;
@@ -41,6 +46,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String emailToUse = userInput;
 
+      // Si el usuario ingresó RUT válido, resolver a email desde perfiles
       if (_authService.isValidRUT(userInput.toUpperCase())) {
         final perfilesRef = _authService.db.collection('perfiles');
         final query = await perfilesRef
@@ -51,15 +57,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         if (query.docs.isEmpty) {
           throw Exception('No existe un usuario con este RUT');
         }
-        emailToUse = query.docs.first['email'];
+        emailToUse = (query.docs.first.data()['email'] ?? '').toString().trim();
+        if (emailToUse.isEmpty) {
+          throw Exception('El perfil con ese RUT no tiene email asociado');
+        }
       }
 
       await _authService.sendPasswordReset(emailToUse);
-      setState(() => _message = 'Se ha enviado un enlace de recuperación a $emailToUse');
+      setState(() {
+        _message = 'Se ha enviado un enlace de recuperación a $emailToUse';
+      });
     } catch (e) {
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -79,9 +92,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Icon(Icons.lock_reset, size: 80, color: Colors.white70),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 const Text(
-                  'Ingresa tu correo electrónico o RUT y te enviaremos un enlace para restablecer tu contraseña.',
+                  'Ingresa tu correo o RUT y te enviaremos un enlace para restablecer tu contraseña.',
                   style: TextStyle(color: Colors.white70),
                   textAlign: TextAlign.center,
                 ),
@@ -135,7 +148,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text(

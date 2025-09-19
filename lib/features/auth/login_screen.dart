@@ -14,13 +14,11 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _userController = TextEditingController();
   final _passwordController = TextEditingController();
-
   final _authService = AuthService();
 
   bool _loading = false;
   String? _error;
   bool _obscurePass = true;
-
   bool _userValid = false;
   bool _passValid = false;
 
@@ -28,8 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _userController.addListener(() {
-      final text = _userController.text.trim();
-      _userValid = _authService.isValidEmail(text) || _authService.isValidRUT(text.toUpperCase());
+      _userValid = UserField.quickValidate(_userController.text, _authService);
       setState(() {});
     });
     _passwordController.addListener(() {

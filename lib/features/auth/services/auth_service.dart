@@ -3,9 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore db = FirebaseFirestore.instance; // <- expuesto para consultas externas
+  final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  // --- Validadores públicos ---
   bool isValidEmail(String email) => _isValidEmail(email);
   bool isValidRUT(String rut) => _isValidRUT(rut);
   bool isValidPassword(String password) => _isValidPassword(password);
@@ -17,7 +16,6 @@ class AuthService {
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
-  // --- Registro ---
   Future<void> registerUser({
     required String nombre,
     required String rut,
@@ -61,7 +59,6 @@ class AuthService {
     });
   }
 
-  // --- Login ---
   Future<void> loginUser({
     required String email,
     required String password,
@@ -84,18 +81,15 @@ class AuthService {
     }
   }
 
-  // --- Logout ---
   Future<void> logoutUser() async {
     await _auth.signOut();
   }
 
-  // --- Recuperar contraseña ---
   Future<void> sendPasswordReset(String email) async {
     if (!_isValidEmail(email)) throw Exception('El correo electrónico no es válido');
     await _auth.sendPasswordResetEmail(email: email);
   }
 
-  // --- Validaciones internas ---
   bool _isValidEmail(String email) {
     final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return regex.hasMatch(email);
@@ -107,6 +101,9 @@ class AuthService {
 
     final body = cleanRut.substring(0, cleanRut.length - 1);
     final dv = cleanRut.substring(cleanRut.length - 1);
+
+    // Evitar error si el cuerpo no es numérico
+    if (!RegExp(r'^\d+$').hasMatch(body)) return false;
 
     int sum = 0;
     int multiplier = 2;
@@ -130,7 +127,6 @@ class AuthService {
   }
 
   bool _isValidPassword(String password) {
-    // Mínimo 8 caracteres, al menos 1 mayúscula y 1 número
     final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{8,}$');
     return regex.hasMatch(password);
   }
