@@ -36,6 +36,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
   bool _guardando = false;
 
   final espacio = const SizedBox(height: 12);
+  final espacio8 = const SizedBox(height: 8);
 
   @override
   void initState() {
@@ -68,6 +69,10 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
   }
 
   Future<void> _guardar() async {
+    if (_rol == null || _ubicacion == null) {
+      return SnackService.mostrar(context, 'No se pudo obtener el rol o la ubicación');
+    }
+
     final error = ValidacionService.validar(
       plan: _planTrabajoCtrl.text,
       area: _areaSel,
@@ -132,7 +137,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
     );
   }
 
-  Widget _buildPeligros(String label, List<String> opciones, List<String> seleccionados, ValueChanged<List<String>> onChanged) {
+  Widget _buildPeligros(String label, List<String> opciones, List<String> seleccionados) {
     if (opciones.isEmpty) return const SizedBox.shrink();
     return Column(
       children: [
@@ -198,8 +203,8 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
             ),
             _buildDropdown('Proceso', _procesoSel, opcionesProceso[areaEnum]!, (v) => setState(() => _procesoSel = v)),
             _buildDropdown('Actividad', _actividadSel, opcionesActividad[areaEnum]!, (v) => setState(() => _actividadSel = v)),
-            _buildPeligros('Peligros', opcionesPeligro[areaEnum]!, _peligrosSel, (_) {}),
-            _buildPeligros('Agente material', opcionesAgenteMaterial[areaEnum]!, _agenteSel, (_) {}),
+            _buildPeligros('Peligros', opcionesPeligro[areaEnum]!, _peligrosSel),
+            _buildPeligros('Agente material', opcionesAgenteMaterial[areaEnum]!, _agenteSel),
             espacio,
             SelectorPeligros(
               label: 'Medidas',
@@ -227,7 +232,7 @@ class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
                 },
               ),
             ],
-            const SizedBox(height: 8),
+            espacio8,
             MapaUbicacion(ubicacion: _ubicacion),
             espacio,
             if (_imagen != null)
