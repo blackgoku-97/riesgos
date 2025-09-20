@@ -67,13 +67,22 @@ class FormularioReporte extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: const EdgeInsets.all(20), // 👈 aire global
       children: [
         Center(child: Image.asset("assets/images/logo.png", height: 60)),
-        const SizedBox(height: 16),
-        Text("Cargo: ${cargo ?? '—'}",
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 24),
 
-        const SizedBox(height: 16),
+        // Sección: Perfil
+        const Text("Datos del trabajador",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 12),
+        Text("Cargo: ${cargo ?? '—'}"),
+        const SizedBox(height: 24),
+
+        // Sección: Ubicación
+        const Text("Ubicación",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 12),
         if (ubicacion != null)
           SizedBox(
             height: 200,
@@ -84,16 +93,23 @@ class FormularioReporte extends StatelessWidget {
               },
             ),
           ),
+        const SizedBox(height: 24),
 
-        const SizedBox(height: 16),
+        // Sección: Detalles del incidente
+        const Text("Detalles del incidente",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 12),
         TextFormField(
-          decoration: const InputDecoration(labelText: "Lugar del incidente"),
+          decoration: const InputDecoration(
+            labelText: "Lugar del incidente",
+            border: OutlineInputBorder(),
+          ),
           initialValue: lugar,
           onChanged: onLugarChanged,
           validator: (v) => v == null || v.isEmpty ? "Ingrese lugar" : null,
         ),
+        const SizedBox(height: 20),
 
-        const SizedBox(height: 16),
         SelectorDropdown<String>(
           label: "¿A quién le ocurrió?",
           value: quienAfectado,
@@ -101,6 +117,7 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onQuienChanged,
         ),
+        const SizedBox(height: 20),
 
         SelectorDropdown<String>(
           label: "Tipo de accidente",
@@ -109,6 +126,7 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onTipoAccidenteChanged,
         ),
+        const SizedBox(height: 20),
 
         if (tipoAccidente != "Cuasi Accidente")
           SelectorDropdown<String>(
@@ -118,6 +136,7 @@ class FormularioReporte extends StatelessWidget {
             getLabel: (o) => o,
             onChanged: onLesionChanged,
           ),
+        if (tipoAccidente != "Cuasi Accidente") const SizedBox(height: 20),
 
         SelectorDropdown<String>(
           label: "Actividad que realizaba",
@@ -126,8 +145,13 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onActividadChanged,
         ),
+        const SizedBox(height: 24),
 
+        // Sección: Evaluación de riesgo/potencial
         if (cargo?.toLowerCase() == "encargado de prevención de riesgos") ...[
+          const Text("Evaluación de potencial",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 12),
           FrecuenciaSeveridadFields(
             frecuencia: frecuencia,
             severidad: severidad,
@@ -135,30 +159,42 @@ class FormularioReporte extends StatelessWidget {
             onFrecuenciaChanged: onFrecuenciaChanged,
             onSeveridadChanged: onSeveridadChanged,
           ),
+          const SizedBox(height: 24),
         ],
 
-        const SizedBox(height: 16),
+        // Sección: Descripción
+        const Text("Descripción",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 12),
         TextFormField(
-          decoration: const InputDecoration(labelText: "Descripción"),
+          decoration: const InputDecoration(
+            labelText: "Descripción",
+            border: OutlineInputBorder(),
+          ),
           initialValue: descripcion,
           maxLines: 3,
           onChanged: onDescripcionChanged,
           validator: (v) => v == null || v.isEmpty ? "Ingrese una descripción" : null,
         ),
+        const SizedBox(height: 24),
 
-        const SizedBox(height: 16),
+        // Sección: Imagen
+        const Text("Evidencia fotográfica",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 12),
         if (imagen != null)
           Image.file(imagen!, height: 200, fit: BoxFit.cover),
-
         ElevatedButton.icon(
           onPressed: onTomarFoto,
           icon: const Icon(Icons.camera_alt),
           label: const Text("Capturar Imagen"),
         ),
+        const SizedBox(height: 32),
 
-        const SizedBox(height: 24),
+        // Botón final
         ElevatedButton(
           onPressed: guardando ? null : onGuardar,
+          style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
           child: guardando
               ? const CircularProgressIndicator(color: Colors.white)
               : const Text("Finalizar Reporte"),
