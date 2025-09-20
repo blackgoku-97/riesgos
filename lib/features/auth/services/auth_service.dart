@@ -23,13 +23,27 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    if (!_isValidEmail(email)) throw Exception('El correo electrónico no es válido');
-    if (!_isValidRUT(rut)) throw Exception('El RUT ingresado no es válido');
+    if (!_isValidEmail(email)) {
+      throw Exception('El correo electrónico no es válido');
+    }
+
+    final cleanRut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
+    if (cleanRut.length < 8) {
+      throw Exception('El RUT debe tener al menos 7 dígitos más el dígito verificador');
+    }
+    if (!_isValidRUT(rut)) {
+      throw Exception('El RUT ingresado no es válido (dígito verificador incorrecto)');
+    }
+
     if (!_isValidPassword(password)) {
       throw Exception('La contraseña debe tener mínimo 8 caracteres, 1 mayúscula y 1 número');
     }
-    if (!startsWithCapital(nombre)) throw Exception('El nombre debe comenzar con mayúscula');
-    if (!startsWithCapital(cargo)) throw Exception('El cargo debe comenzar con mayúscula');
+    if (!startsWithCapital(nombre)) {
+      throw Exception('El nombre debe comenzar con mayúscula');
+    }
+    if (!startsWithCapital(cargo)) {
+      throw Exception('El cargo debe comenzar con mayúscula');
+    }
 
     final perfilesRef = db.collection('perfiles');
 
@@ -63,7 +77,9 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    if (!_isValidEmail(email)) throw Exception('El correo electrónico no es válido');
+    if (!_isValidEmail(email)) {
+      throw Exception('El correo electrónico no es válido');
+    }
     if (!_isValidPassword(password)) {
       throw Exception('La contraseña debe tener mínimo 8 caracteres, 1 mayúscula y 1 número');
     }
@@ -86,7 +102,9 @@ class AuthService {
   }
 
   Future<void> sendPasswordReset(String email) async {
-    if (!_isValidEmail(email)) throw Exception('El correo electrónico no es válido');
+    if (!_isValidEmail(email)) {
+      throw Exception('El correo electrónico no es válido');
+    }
     await _auth.sendPasswordResetEmail(email: email);
   }
 
@@ -97,12 +115,12 @@ class AuthService {
 
   bool _isValidRUT(String rut) {
     final cleanRut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
-    if (cleanRut.length < 8) return false;
+
+    if (cleanRut.length < 8) return false; // mínimo 7 dígitos + DV
 
     final body = cleanRut.substring(0, cleanRut.length - 1);
     final dv = cleanRut.substring(cleanRut.length - 1);
 
-    // Evitar error si el cuerpo no es numérico
     if (!RegExp(r'^\d+$').hasMatch(body)) return false;
 
     int sum = 0;

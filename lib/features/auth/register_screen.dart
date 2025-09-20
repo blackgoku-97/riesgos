@@ -25,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _loading = false;
   String? _error;
+
   bool _obscurePass = true;
   bool _obscureConfirm = true;
 
@@ -34,25 +35,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _nombreValid = false;
   bool _cargoValid = false;
 
+  // 👇 mensajes de error específicos
+  String? _rutError;
+  String? _emailError;
+  String? _passwordError;
+
   @override
   void initState() {
     super.initState();
 
     _emailController.addListener(() {
-      _emailValid = _authService.isValidEmail(_emailController.text.trim());
+      final text = _emailController.text.trim();
+      if (text.isEmpty) {
+        _emailValid = false;
+        _emailError = null;
+      } else if (!_authService.isValidEmail(text)) {
+        _emailValid = false;
+        _emailError = 'El correo electrónico no es válido';
+      } else {
+        _emailValid = true;
+        _emailError = null;
+      }
       setState(() {});
     });
 
     _rutController.addListener(() {
       final text = _rutController.text.trim().toUpperCase();
-      // Solo validar si parece un RUT (números + guion + dígito/K)
       final rutPattern = RegExp(r'^\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]$');
-      _rutValid = rutPattern.hasMatch(text) && _authService.isValidRUT(text);
+
+      if (text.isEmpty) {
+        _rutValid = false;
+        _rutError = null;
+      } else if (!rutPattern.hasMatch(text)) {
+        _rutValid = false;
+        _rutError = 'Formato inválido. Ej: 12.345.678-5';
+      } else if (!_authService.isValidRUT(text)) {
+        _rutValid = false;
+        _rutError = 'El RUT ingresado no es válido';
+      } else {
+        _rutValid = true;
+        _rutError = null;
+      }
       setState(() {});
     });
 
     _passwordController.addListener(() {
-      _passValid = _authService.isValidPassword(_passwordController.text.trim());
+      final text = _passwordController.text.trim();
+      if (text.isEmpty) {
+        _passValid = false;
+        _passwordError = null;
+      } else if (!_authService.isValidPassword(text)) {
+        _passValid = false;
+        _passwordError = 'Debe tener mínimo 8 caracteres, 1 mayúscula y 1 número';
+      } else {
+        _passValid = true;
+        _passwordError = null;
+      }
       setState(() {});
     });
 
@@ -78,7 +116,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _nombreValid && _rutValid && _cargoValid && _emailValid && _passValid && _confirmValid;
 
   Future<void> _register() async {
-    // Revalidar antes de enviar
     if (!_formValid) {
       setState(() => _error = 'Por favor, completa todos los campos correctamente.');
       return;
@@ -155,6 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 RutField(
                   controller: _rutController,
                   isValid: _rutValid,
+                  errorText: _rutError, // 👈 mensaje debajo del campo
                 ),
                 const SizedBox(height: 16),
 
@@ -172,6 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 EmailField(
                   controller: _emailController,
                   isValid: _emailValid,
+                  errorText: _emailError, // 👈 mensaje debajo del campo
                 ),
                 const SizedBox(height: 16),
 
@@ -182,6 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
                   isValid: _passValid,
                   helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
+                  errorText: _passwordError, // 👈 mensaje debajo del campo
                 ),
                 const SizedBox(height: 16),
 

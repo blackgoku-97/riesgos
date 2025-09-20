@@ -7,6 +7,7 @@ class PasswordField extends StatelessWidget {
   final VoidCallback onToggleVisibility;
   final bool isValid;
   final String helperText;
+  final String? errorText;
 
   const PasswordField({
     super.key,
@@ -15,67 +16,54 @@ class PasswordField extends StatelessWidget {
     required this.obscure,
     required this.onToggleVisibility,
     required this.isValid,
-    required this.helperText,
+    this.helperText = '',
+    this.errorText,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextField(
-          controller: controller,
-          obscureText: obscure,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: const TextStyle(color: Colors.white70),
-            filled: true,
-            fillColor: Colors.white10,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: controller.text.isEmpty
-                    ? Colors.transparent
-                    : isValid
-                        ? Colors.green
-                        : Colors.red,
-                width: 2,
-              ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: controller.text.isEmpty
-                    ? Colors.blue
-                    : isValid
-                        ? Colors.green
-                        : Colors.red,
-                width: 2,
-              ),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                obscure ? Icons.visibility : Icons.visibility_off,
-                color: Colors.white70,
-              ),
-              onPressed: onToggleVisibility,
-            ),
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: Colors.white10,
+        helperText: helperText.isNotEmpty ? helperText : null,
+        helperStyle: const TextStyle(color: Colors.white54),
+        errorText: errorText, // 👈 mensaje debajo del campo
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscure ? Icons.visibility_off : Icons.visibility,
+            color: Colors.white70,
           ),
+          onPressed: onToggleVisibility,
         ),
-        const SizedBox(height: 8),
-        Text(
-          helperText,
-          style: TextStyle(
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
             color: controller.text.isEmpty
-                ? Colors.white54
+                ? Colors.transparent
                 : isValid
                     ? Colors.green
-                    : Colors.redAccent,
-            fontSize: 12,
+                    : Colors.red,
+            width: 2,
           ),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: controller.text.isEmpty
+                ? Colors.blue
+                : isValid
+                    ? Colors.green
+                    : Colors.red,
+            width: 2,
+          ),
+        ),
+      ),
     );
   }
 }

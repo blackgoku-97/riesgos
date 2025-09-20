@@ -22,15 +22,41 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _userValid = false;
   bool _passValid = false;
 
+  // 👇 mensajes de error específicos
+  String? _userError;
+  String? _passwordError;
+
   @override
   void initState() {
     super.initState();
+
     _userController.addListener(() {
-      _userValid = UserField.quickValidate(_userController.text, _authService);
+      final text = _userController.text.trim();
+      if (text.isEmpty) {
+        _userValid = false;
+        _userError = null;
+      } else if (!UserField.quickValidate(text, _authService)) {
+        _userValid = false;
+        _userError = 'Ingresa un correo válido o un RUT válido';
+      } else {
+        _userValid = true;
+        _userError = null;
+      }
       setState(() {});
     });
+
     _passwordController.addListener(() {
-      _passValid = _authService.isValidPassword(_passwordController.text.trim());
+      final text = _passwordController.text.trim();
+      if (text.isEmpty) {
+        _passValid = false;
+        _passwordError = null;
+      } else if (!_authService.isValidPassword(text)) {
+        _passValid = false;
+        _passwordError = 'Debe tener mínimo 8 caracteres, 1 mayúscula y 1 número';
+      } else {
+        _passValid = true;
+        _passwordError = null;
+      }
       setState(() {});
     });
   }
@@ -94,6 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
+                  errorText: _userError, // 👈 mensaje debajo del campo
                 ),
                 const SizedBox(height: 16),
 
@@ -104,6 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
                   isValid: _passValid,
                   helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
+                  errorText: _passwordError, // 👈 mensaje debajo del campo
                 ),
                 const SizedBox(height: 12),
 

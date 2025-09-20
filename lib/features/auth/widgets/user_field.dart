@@ -4,32 +4,22 @@ import '../services/auth_service.dart';
 class UserField extends StatelessWidget {
   final TextEditingController controller;
   final bool isValid;
+  final String? errorText; // 👈 nuevo parámetro opcional
   final String label;
 
   const UserField({
     super.key,
     required this.controller,
     required this.isValid,
-    this.label = 'Email o RUT',
+    this.errorText,
+    this.label = 'Correo o RUT',
   });
 
-  static bool quickValidate(String text, AuthService authService) {
-    final trimmed = text.trim();
-    if (trimmed.isEmpty) return false;
-
-    // Si contiene '@', asumimos que es email
-    if (trimmed.contains('@')) {
-      return authService.isValidEmail(trimmed);
-    }
-
-    // Si tiene formato de RUT básico (números + guion + dígito/K)
-    final rutPattern = RegExp(r'^\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]$');
-    if (rutPattern.hasMatch(trimmed)) {
-      return authService.isValidRUT(trimmed.toUpperCase());
-    }
-
-    // No es email ni RUT con formato válido
-    return false;
+  // Método rápido de validación (puede usarse en LoginScreen)
+  static bool quickValidate(String input, AuthService authService) {
+    final text = input.trim();
+    if (text.isEmpty) return false;
+    return authService.isValidEmail(text) || authService.isValidRUT(text.toUpperCase());
   }
 
   @override
@@ -37,11 +27,13 @@ class UserField extends StatelessWidget {
     return TextField(
       controller: controller,
       style: const TextStyle(color: Colors.white),
+      keyboardType: TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
         fillColor: Colors.white10,
+        errorText: errorText, // 👈 mensaje debajo del campo
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
