@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../constants/opciones.dart';
+import 'frecuencia_severidad_fields.dart';
+import 'selector_dropdown.dart';
 
 class FormularioReporte extends StatelessWidget {
   final String? cargo;
@@ -15,7 +17,8 @@ class FormularioReporte extends StatelessWidget {
   final String? descripcion;
   final int? frecuencia;
   final int? severidad;
-  final int? potencial; // 🔄 ahora usamos potencial
+  final int? potencial;
+  final String? nivelPotencial;
   final File? imagen;
   final LatLng? ubicacion;
   final bool guardando;
@@ -44,7 +47,8 @@ class FormularioReporte extends StatelessWidget {
     required this.descripcion,
     required this.frecuencia,
     required this.severidad,
-    required this.potencial, // 🔄
+    required this.potencial,
+    required this.nivelPotencial,
     required this.imagen,
     required this.ubicacion,
     required this.guardando,
@@ -90,69 +94,47 @@ class FormularioReporte extends StatelessWidget {
         ),
 
         const SizedBox(height: 16),
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(labelText: "¿A quién le ocurrió?"),
-          initialValue: quienAfectado,
-          hint: const Text("Seleccione una opción"),
-          items: ["Trabajador", "Visita", "Contratista"]
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+        SelectorDropdown<String>(
+          label: "¿A quién le ocurrió?",
+          value: quienAfectado,
+          opciones: const ["Trabajador", "Visita", "Contratista"],
+          getLabel: (o) => o,
           onChanged: onQuienChanged,
-          validator: (v) => v == null || v.isEmpty ? "Seleccione una opción" : null,
         ),
 
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(labelText: "Tipo de accidente"),
-          initialValue: tipoAccidente,
-          hint: const Text("Seleccione un tipo"),
-          items: opcionesAccidente
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+        SelectorDropdown<String>(
+          label: "Tipo de accidente",
+          value: tipoAccidente,
+          opciones: opcionesAccidente,
+          getLabel: (o) => o,
           onChanged: onTipoAccidenteChanged,
-          validator: (v) => v == null || v.isEmpty ? "Seleccione un tipo de accidente" : null,
         ),
 
         if (tipoAccidente != "Cuasi Accidente")
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(labelText: "Tipo de lesión"),
-            initialValue: lesion,
-            hint: const Text("Seleccione una lesión"),
-            items: opcionesLesion
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                .toList(),
+          SelectorDropdown<String>(
+            label: "Tipo de lesión",
+            value: lesion,
+            opciones: opcionesLesion,
+            getLabel: (o) => o,
             onChanged: onLesionChanged,
-            validator: (v) => v == null || v.isEmpty ? "Seleccione una lesión" : null,
           ),
 
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(labelText: "Actividad que realizaba"),
-          initialValue: actividad,
-          hint: const Text("Seleccione una actividad"),
-          items: ["Mantención", "Operación", "Transporte"]
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
+        SelectorDropdown<String>(
+          label: "Actividad que realizaba",
+          value: actividad,
+          opciones: opcionesActividad,
+          getLabel: (o) => o,
           onChanged: onActividadChanged,
-          validator: (v) => v == null || v.isEmpty ? "Seleccione una actividad" : null,
         ),
 
         if (cargo?.toLowerCase() == "encargado de prevención de riesgos") ...[
-          DropdownButtonFormField<int>(
-            decoration: const InputDecoration(labelText: "Frecuencia (1-5)"),
-            initialValue: frecuencia,
-            items: List.generate(5, (i) => i + 1)
-                .map((e) => DropdownMenuItem(value: e, child: Text("$e")))
-                .toList(),
-            onChanged: onFrecuenciaChanged,
+          FrecuenciaSeveridadFields(
+            frecuencia: frecuencia,
+            severidad: severidad,
+            nivelPotencial: nivelPotencial,
+            onFrecuenciaChanged: onFrecuenciaChanged,
+            onSeveridadChanged: onSeveridadChanged,
           ),
-          DropdownButtonFormField<int>(
-            decoration: const InputDecoration(labelText: "Severidad (1-5)"),
-            initialValue: severidad,
-            items: List.generate(5, (i) => i + 1)
-                .map((e) => DropdownMenuItem(value: e, child: Text("$e")))
-                .toList(),
-            onChanged: onSeveridadChanged,
-          ),
-          Text("Potencial: ${potencial ?? '—'}"), // 🔄 cambiado
         ],
 
         const SizedBox(height: 16),

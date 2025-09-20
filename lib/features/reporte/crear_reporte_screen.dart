@@ -22,8 +22,8 @@ class CrearReporteScreen extends StatefulWidget {
 class _CrearReporteScreenState extends State<CrearReporteScreen> {
   String? _rol, _cargo;
   String? _lugar, _tipoAccidente, _lesion, _actividad, _quienAfectado, _descripcion;
-  int? _frecuencia, _severidad;
-  int? _potencial; // 🔄 ahora usamos potencial
+  int? _frecuencia, _severidad, _potencial;
+  String? _nivelPotencial; // Texto: Bajo, Medio, Alto
   File? _imagen;
   LatLng? _ubicacion;
   bool _guardando = false;
@@ -52,6 +52,13 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
   void _calcularPotencial() {
     if (_frecuencia != null && _severidad != null) {
       _potencial = _frecuencia! * _severidad!;
+      if (_potencial! <= 4) {
+        _nivelPotencial = 'Bajo';
+      } else if (_potencial! <= 9) {
+        _nivelPotencial = 'Medio';
+      } else {
+        _nivelPotencial = 'Alto';
+      }
       setState(() {});
     }
   }
@@ -78,7 +85,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
       descripcion: _descripcion,
       frecuencia: _frecuencia,
       severidad: _severidad,
-      potencial: _potencial, // 🔄 validamos potencial
+      potencial: _potencial,
       imagen: _imagen,
     );
     if (error != null) return SnackService.mostrar(context, error);
@@ -103,7 +110,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
         descripcion: _descripcion!,
         frecuencia: _frecuencia,
         severidad: _severidad,
-        potencial: _potencial, // 🔄 guardamos potencial
+        potencial: _potencial,
         ubicacion: ubicacion,
         urlImagen: urlImagen,
       );
@@ -146,7 +153,8 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           descripcion: _descripcion,
           frecuencia: _frecuencia,
           severidad: _severidad,
-          potencial: _potencial, // 🔄 pasamos potencial
+          potencial: _potencial,
+          nivelPotencial: _nivelPotencial,
           imagen: _imagen,
           ubicacion: _ubicacion,
           guardando: _guardando,

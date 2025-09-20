@@ -25,3 +25,16 @@ const List<String> opcionesLesion = [
   "Lesiones respiratorias",
   "Asfixias y ahogamientos",
 ];
+
+const List<String> opcionesActividad = [
+  "Alimentación",
+  "Calefacción",
+  "Soldadura",
+  "Operación de móviles en terreno",
+  "Mantención",
+  "Construcción y reparación de carrozados",
+  "Control de incendios",
+  "Desplazamiento a taller",
+  "Estadía en oficina",
+  "Instalación de Bases de Cargulo",
+];

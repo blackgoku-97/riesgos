@@ -10,7 +10,7 @@ class ValidacionService {
     String? descripcion,
     int? frecuencia,
     int? severidad,
-    int? potencial, // 🔄 ahora validamos potencial
+    int? potencial, // 🔄 validamos potencial
     File? imagen,
   }) {
     if (lugar == null || lugar.isEmpty) {
