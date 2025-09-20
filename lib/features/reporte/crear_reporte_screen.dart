@@ -1,7 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../reporte/services/perfil_service.dart';
+import '../reporte/services/ubicacion_service.dart';
+import '../reporte/services/validacion_service.dart';
+import '../reporte/services/reporte_service.dart';
+import '../reporte/services/snack_service.dart';
+import '../reporte/services/imagen_service.dart';
+import '../reporte/services/storage_service.dart';
+
+import '../reporte/widgets/formulario_reporte.dart';
 
 class CrearReporteScreen extends StatefulWidget {
   const CrearReporteScreen({super.key});
@@ -11,160 +20,152 @@ class CrearReporteScreen extends StatefulWidget {
 }
 
 class _CrearReporteScreenState extends State<CrearReporteScreen> {
-  final _formKey = GlobalKey<FormState>();
-
-  String cargo = "Encargado de prevención de riesgos";
-  String? lugar;
-  String? tipoAccidente;
-  String? lesion;
-  String? actividad;
-  String? quienAfectado;
-  int? frecuencia;
-  int? severidad;
-  String? descripcion;
-
+  String? _rol, _cargo;
+  String? _lugar, _tipoAccidente, _lesion, _actividad, _quienAfectado, _descripcion;
+  int? _frecuencia, _severidad;
+  int? _potencial; // 🔄 ahora usamos potencial
   File? _imagen;
+  LatLng? _ubicacion;
   bool _guardando = false;
 
-  LatLng? ubicacion = const LatLng(-36.826, -73.049); // Ejemplo: Talcahuano
+  @override
+  void initState() {
+    super.initState();
+    _cargarPerfil();
+    _obtenerUbicacion();
+  }
 
-  Future<void> _tomarFoto() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-    if (picked != null) {
-      setState(() => _imagen = File(picked.path));
+  Future<void> _cargarPerfil() async {
+    final perfil = await PerfilService.obtenerPerfilUsuario();
+    if (!mounted) return;
+    setState(() {
+      _rol = (perfil?['rol'] as String?)?.trim().toLowerCase();
+      _cargo = (perfil?['cargo'] as String?)?.trim();
+    });
+  }
+
+  Future<void> _obtenerUbicacion() async {
+    final ubic = await UbicacionService.obtenerUbicacion(context);
+    if (mounted && ubic != null) setState(() => _ubicacion = ubic);
+  }
+
+  void _calcularPotencial() {
+    if (_frecuencia != null && _severidad != null) {
+      _potencial = _frecuencia! * _severidad!;
+      setState(() {});
     }
   }
 
-  void _guardar() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _guardando = true);
+  Future<void> _tomarFoto() async {
+    final img = await ImagenService.tomarFoto();
+    if (mounted && img != null) setState(() => _imagen = img);
+  }
 
-    // Simulación de guardado
-    await Future.delayed(const Duration(seconds: 2));
+  Future<void> _guardar() async {
+    final cargo = _cargo;
+    final rol = _rol;
+    final ubicacion = _ubicacion;
+    if (rol == null || cargo == null || ubicacion == null) {
+      return SnackService.mostrar(context, 'No se pudo obtener perfil o ubicación');
+    }
 
-    if (!mounted) return;
-    setState(() => _guardando = false);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("✅ Reporte guardado con éxito"), backgroundColor: Colors.red),
+    final error = ValidacionService.validarReporte(
+      lugar: _lugar,
+      tipoAccidente: _tipoAccidente,
+      lesion: _lesion,
+      actividad: _actividad,
+      quienAfectado: _quienAfectado,
+      descripcion: _descripcion,
+      frecuencia: _frecuencia,
+      severidad: _severidad,
+      potencial: _potencial, // 🔄 validamos potencial
+      imagen: _imagen,
     );
+    if (error != null) return SnackService.mostrar(context, error);
 
-    Navigator.pop(context, true);
+    setState(() => _guardando = true);
+    try {
+      final urlImagen = _imagen != null
+          ? await StorageService.uploadFile(
+              file: _imagen!,
+              path: 'reportes/${DateTime.now().millisecondsSinceEpoch}.jpg',
+            )
+          : null;
+
+      await ReporteService.guardar(
+        cargo: cargo,
+        rol: rol,
+        lugar: _lugar!,
+        tipoAccidente: _tipoAccidente!,
+        lesion: _lesion,
+        actividad: _actividad!,
+        quienAfectado: _quienAfectado!,
+        descripcion: _descripcion!,
+        frecuencia: _frecuencia,
+        severidad: _severidad,
+        potencial: _potencial, // 🔄 guardamos potencial
+        ubicacion: ubicacion,
+        urlImagen: urlImagen,
+      );
+
+      if (!mounted) return;
+      SnackService.mostrar(context, 'Reporte guardado con éxito', success: true);
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        SnackService.mostrar(context, 'Error al guardar: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _guardando = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Crear Reporte")),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(child: Image.asset("assets/images/logo.png", height: 60)),
-              const SizedBox(height: 16),
-              Text("Cargo: $cargo", style: const TextStyle(fontWeight: FontWeight.bold)),
-
-              const SizedBox(height: 16),
-              if (ubicacion != null)
-                SizedBox(
-                  height: 200,
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(target: ubicacion!, zoom: 17),
-                    markers: {
-                      Marker(markerId: const MarkerId("ubicacion"), position: ubicacion!)
-                    },
-                  ),
-                ),
-
-              const SizedBox(height: 16),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Lugar del incidente"),
-                onChanged: (v) => lugar = v,
-                validator: (v) => v == null || v.isEmpty ? "Ingrese lugar" : null,
-              ),
-
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: "¿A quién le ocurrió?"),
-                items: ["Trabajador", "Visita", "Contratista"]
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) => quienAfectado = v,
-              ),
-
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: "Tipo de accidente"),
-                items: ["Accidente", "Cuasi Accidente"]
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) => setState(() => tipoAccidente = v),
-              ),
-
-              if (tipoAccidente != "Cuasi Accidente")
-                DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(labelText: "Tipo de lesión"),
-                  items: ["Corte", "Golpe", "Fractura"]
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-                  onChanged: (v) => lesion = v,
-                ),
-
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: "Actividad que realizaba"),
-                items: ["Mantención", "Operación", "Transporte"]
-                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                    .toList(),
-                onChanged: (v) => actividad = v,
-              ),
-
-              if (cargo.toLowerCase() == "encargado de prevención de riesgos") ...[
-                DropdownButtonFormField<int>(
-                  decoration: const InputDecoration(labelText: "Frecuencia (1-5)"),
-                  items: List.generate(5, (i) => i + 1)
-                      .map((e) => DropdownMenuItem(value: e, child: Text("$e")))
-                      .toList(),
-                  onChanged: (v) => frecuencia = v,
-                ),
-                DropdownButtonFormField<int>(
-                  decoration: const InputDecoration(labelText: "Severidad (1-5)"),
-                  items: List.generate(5, (i) => i + 1)
-                      .map((e) => DropdownMenuItem(value: e, child: Text("$e")))
-                      .toList(),
-                  onChanged: (v) => severidad = v,
-                ),
-                Text("Potencial: ${frecuencia != null && severidad != null ? frecuencia! * severidad! : '—'}"),
-              ],
-
-              const SizedBox(height: 16),
-              TextFormField(
-                decoration: const InputDecoration(labelText: "Descripción"),
-                maxLines: 3,
-                onChanged: (v) => descripcion = v,
-              ),
-
-              const SizedBox(height: 16),
-              if (_imagen != null)
-                Image.file(_imagen!, height: 200, fit: BoxFit.cover),
-
-              ElevatedButton.icon(
-                onPressed: _tomarFoto,
-                icon: const Icon(Icons.camera_alt),
-                label: const Text("Capturar Imagen"),
-              ),
-
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _guardando ? null : _guardar,
-                child: _guardando
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Finalizar Reporte"),
-              ),
-            ],
+      appBar: AppBar(
+        title: const Text('Crear reporte'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.my_location),
+            onPressed: _obtenerUbicacion,
+            tooltip: 'Actualizar ubicación',
           ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: FormularioReporte(
+          cargo: _cargo,
+          rol: _rol,
+          lugar: _lugar,
+          tipoAccidente: _tipoAccidente,
+          lesion: _lesion,
+          actividad: _actividad,
+          quienAfectado: _quienAfectado,
+          descripcion: _descripcion,
+          frecuencia: _frecuencia,
+          severidad: _severidad,
+          potencial: _potencial, // 🔄 pasamos potencial
+          imagen: _imagen,
+          ubicacion: _ubicacion,
+          guardando: _guardando,
+          onTomarFoto: _tomarFoto,
+          onGuardar: _guardar,
+          onLugarChanged: (v) => setState(() => _lugar = v),
+          onTipoAccidenteChanged: (v) => setState(() => _tipoAccidente = v),
+          onLesionChanged: (v) => setState(() => _lesion = v),
+          onActividadChanged: (v) => setState(() => _actividad = v),
+          onQuienChanged: (v) => setState(() => _quienAfectado = v),
+          onDescripcionChanged: (v) => setState(() => _descripcion = v),
+          onFrecuenciaChanged: (v) {
+            _frecuencia = v;
+            _calcularPotencial();
+          },
+          onSeveridadChanged: (v) {
+            _severidad = v;
+            _calcularPotencial();
+          },
         ),
       ),
     );
