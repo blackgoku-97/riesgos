@@ -11,6 +11,8 @@ import 'features/dashboard/dashboard_screen.dart';
 import 'features/planificacion/crear_planificacion_screen.dart';
 import 'features/planificacion/historial_planificacion_screen.dart';
 import 'features/planificacion/duplicar_planificacion_screen.dart';
+import 'features/reporte/crear_reporte_screen.dart';
+import 'features/reporte/historial_reporte.screen.dart';
 import 'features/users/ver_usuarios_screen.dart';
 
 void main() async {
@@ -46,6 +48,8 @@ class MyApp extends StatelessWidget {
             planificacion: {},
           );
         },
+        '/reporte': (context) => const CrearReporteScreen(),
+        '/historial_reportes': (context) => const HistorialReportesScreen(),
         '/ver_usuarios': (context) => const VerUsuariosScreen(),
       },
     );
