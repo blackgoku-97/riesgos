@@ -35,7 +35,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _nombreValid = false;
   bool _cargoValid = false;
 
-  // 👇 mensajes de error específicos
   String? _rutError;
   String? _emailError;
   String? _passwordError;
@@ -192,7 +191,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 RutField(
                   controller: _rutController,
                   isValid: _rutValid,
-                  errorText: _rutError, // 👈 mensaje debajo del campo
+                  errorText: _rutError,
                 ),
                 const SizedBox(height: 16),
 
@@ -210,7 +209,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 EmailField(
                   controller: _emailController,
                   isValid: _emailValid,
-                  errorText: _emailError, // 👈 mensaje debajo del campo
+                  errorText: _emailError,
                 ),
                 const SizedBox(height: 16),
 
@@ -221,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
                   isValid: _passValid,
                   helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
-                  errorText: _passwordError, // 👈 mensaje debajo del campo
+                  errorText: _passwordError,
                 ),
                 const SizedBox(height: 16),
 

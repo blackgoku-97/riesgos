@@ -22,7 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _userValid = false;
   bool _passValid = false;
 
-  // 👇 mensajes de error específicos
   String? _userError;
   String? _passwordError;
 
@@ -75,6 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       String emailToUse = userInput;
 
+      // Si es RUT, buscar el email asociado en Firestore
       if (_authService.isValidRUT(userInput.toUpperCase())) {
         final perfilesRef = _authService.db.collection('perfiles');
         final query = await perfilesRef
@@ -120,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
-                  errorText: _userError, // 👈 mensaje debajo del campo
+                  errorText: _userError,
                 ),
                 const SizedBox(height: 16),
 
@@ -131,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
                   isValid: _passValid,
                   helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
-                  errorText: _passwordError, // 👈 mensaje debajo del campo
+                  errorText: _passwordError,
                 ),
                 const SizedBox(height: 12),
 
