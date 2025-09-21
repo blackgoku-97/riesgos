@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../widgets/tarjeta_planificacion.dart';
+import '../utils/tarjeta_utils_planificacion.dart';
 
 class HistorialPlanificacionesScreen extends StatefulWidget {
   const HistorialPlanificacionesScreen({super.key});
@@ -43,7 +43,7 @@ class _HistorialPlanificacionesScreenState extends State<HistorialPlanificacione
             padding: const EdgeInsets.all(8),
             itemCount: docs.length,
             itemBuilder: (context, i) {
-              return TarjetaPlanificacion(
+              return TarjetaUtilsPlanificacion(
                 doc: docs[i],
                 onEditar: () {
                   Navigator.pushNamed(

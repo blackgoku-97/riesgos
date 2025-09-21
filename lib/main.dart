@@ -13,6 +13,7 @@ import 'features/planificacion/screens/historial_planificacion_screen.dart';
 import 'features/planificacion/screens/duplicar_planificacion_screen.dart';
 import 'features/reporte/screens/crear_reporte_screen.dart';
 import 'features/reporte/screens/historial_reporte.screen.dart';
+import 'features/reporte/screens/duplicar_reporte_screen.dart';
 import 'features/users/screens/ver_usuarios_screen.dart';
 
 void main() async {
@@ -50,6 +51,14 @@ class MyApp extends StatelessWidget {
         },
         '/reporte': (context) => const CrearReporteScreen(),
         '/historial_reportes': (context) => const HistorialReportesScreen(),
+        '/duplicar_reporte': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return DuplicarReporteScreen(
+            data: args['data'],
+            origenId: args['origenId'],
+            reporte: {},
+          );
+        },
         '/ver_usuarios': (context) => const VerUsuariosScreen(),
       },
     );

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
-class DeleteUtils {
-  static Future<void> confirmarYEliminarPlanificacion({
+class DeleteUtilsReporte {
+  static Future<void> confirmarYEliminarReporte({
     required BuildContext context,
     required String id,
     String? urlImagen,
@@ -12,10 +12,14 @@ class DeleteUtils {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Confirmar eliminación'),
-        content: const Text('¿Seguro que deseas eliminar esta planificación?'),
+        content: const Text('¿Seguro que deseas eliminar este reporte?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Eliminar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Eliminar')),
         ],
       ),
     );
@@ -30,15 +34,19 @@ class DeleteUtils {
 
       try {
         if (urlImagen != null && urlImagen.isNotEmpty) {
-          final ref = firebase_storage.FirebaseStorage.instance.refFromURL(urlImagen);
+          final ref =
+              firebase_storage.FirebaseStorage.instance.refFromURL(urlImagen);
           await ref.delete();
         }
-        await FirebaseFirestore.instance.collection('planificaciones').doc(id).delete();
+        await FirebaseFirestore.instance
+            .collection('reportes')
+            .doc(id)
+            .delete();
 
         if (!context.mounted) return;
         Navigator.pop(context); // Cierra loader
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Planificación e imagen eliminadas')),
+          const SnackBar(content: Text('Reporte e imagen eliminados')),
         );
       } catch (e) {
         if (!context.mounted) return;

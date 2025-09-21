@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../utils/export_utils.dart';
-import '../utils/delete_utils.dart';
+import 'export_utils_reporte.dart';
+import 'delete_utils_reporte.dart';
 
-class TarjetaPlanificacion extends StatelessWidget {
+class TarjetaUtilsReporte extends StatelessWidget {
   final DocumentSnapshot doc;
   final VoidCallback onEditar;
 
-  const TarjetaPlanificacion({
+  const TarjetaUtilsReporte({
     super.key,
     required this.doc,
     required this.onEditar,
@@ -34,16 +34,23 @@ class TarjetaPlanificacion extends StatelessWidget {
     final data = doc.data() as Map<String, dynamic>;
 
     final info = [
-      '📅 Fecha: ${data['fechaPlanificacionLocal'] ?? ''}',
+      '📅 Fecha: ${data['fechaReporteLocal'] ?? ''}',
       '👤 Cargo: ${data['cargo'] ?? ''}',
-      '📌 Plan de trabajo: ${data['planTrabajo'] ?? ''}',
-      '📍 Área: ${data['area'] ?? ''}',
-      '🔄 Proceso: ${data['proceso'] ?? ''}',
+      '🧑 Rol: ${data['rol'] ?? ''}',
+      '📍 Lugar: ${data['lugar'] ?? ''}',
+      '💥 Tipo de Accidente: ${data['tipoAccidente'] ?? ''}',
+      '🤕 Lesiones: ${(data['lesiones'] as List?)?.join(", ") ?? "—"}',
       '🔧 Actividad: ${data['actividad'] ?? ''}',
-      '⚠️ Peligros: ${(data['peligros'] as List?)?.join(", ") ?? "—"}',
-      '🧪 Agente Material: ${(data['agenteMaterial'] as List?)?.join(", ") ?? "—"}',
+      '📊 Clasificación: ${data['clasificacion'] ?? ''}',
+      '⚠️ Acciones Inseguras: ${(data['accionesInseguras'] as List?)?.join(", ") ?? "—"}',
+      '🏗️ Condiciones Inseguras: ${(data['condicionesInseguras'] as List?)?.join(", ") ?? "—"}',
       '🛡️ Medidas: ${(data['medidas'] as List?)?.join(", ") ?? "—"}',
-      '📉 Riesgo: ${data['nivelRiesgo'] ?? ''}',
+      '👥 ¿A quién le ocurrió?: ${data['quienAfectado'] ?? ''}',
+      '📝 Descripción: ${data['descripcion'] ?? ''}',
+      '📈 Frecuencia: ${data['frecuencia'] ?? ''}',
+      '📉 Severidad: ${data['severidad'] ?? ''}',
+      '🔥 Potencial: ${data['potencial'] ?? ''}',
+      '🚨 Nivel Potencial: ${data['nivelPotencial'] ?? ''}',
     ];
 
     return Card(
@@ -54,7 +61,7 @@ class TarjetaPlanificacion extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              data['numeroPlanificacion'] ?? '',
+              data['numeroReporte'] ?? '',
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             ...info.map((t) => Text(t)),
@@ -75,13 +82,13 @@ class TarjetaPlanificacion extends StatelessWidget {
                 _buildButton(
                   text: 'Exportar Excel',
                   color: Colors.green,
-                  onPressed: () => ExportUtils.exportarExcel(data),
+                  onPressed: () => ExportUtilsReporte.exportarExcel(data),
                 ),
                 const SizedBox(width: 8),
                 _buildButton(
                   text: 'Exportar PDF',
                   color: Colors.red,
-                  onPressed: () => ExportUtils.exportarPDF(data),
+                  onPressed: () => ExportUtilsReporte.exportarPDF(data),
                 ),
               ],
             ),
@@ -89,15 +96,15 @@ class TarjetaPlanificacion extends StatelessWidget {
             Row(
               children: [
                 _buildButton(
-                  text: 'Editar Planificación',
+                  text: 'Editar Reporte',
                   color: Colors.black,
                   onPressed: onEditar,
                 ),
                 const SizedBox(width: 8),
                 _buildButton(
-                  text: 'Eliminar Planificación',
+                  text: 'Eliminar Reporte',
                   color: Colors.red,
-                  onPressed: () => DeleteUtils.confirmarYEliminarPlanificacion(
+                  onPressed: () => DeleteUtilsReporte.confirmarYEliminarReporte(
                     context: context,
                     id: doc.id,
                     urlImagen: data['urlImagen'],

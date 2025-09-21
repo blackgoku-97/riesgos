@@ -8,6 +8,8 @@ import 'selector_dropdown.dart';
 import 'selector_lesiones.dart';
 import 'selector_clasificaciones.dart';
 import 'selector_medidas.dart';
+import 'mapa_ubicacion.dart';
+import 'guardar_button.dart';
 
 class FormularioReporte extends StatelessWidget {
   final String? cargo;
@@ -100,16 +102,7 @@ class FormularioReporte extends StatelessWidget {
         const Text("Ubicación",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
-        if (ubicacion != null)
-          SizedBox(
-            height: 200,
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(target: ubicacion!, zoom: 17),
-              markers: {
-                Marker(markerId: const MarkerId("ubicacion"), position: ubicacion!)
-              },
-            ),
-          ),
+        MapaUbicacion(ubicacion: ubicacion),
         const SizedBox(height: 24),
 
         const Text("Detalles del incidente",
@@ -220,7 +213,8 @@ class FormularioReporte extends StatelessWidget {
           initialValue: descripcion,
           maxLines: 3,
           onChanged: onDescripcionChanged,
-          validator: (v) => v == null || v.isEmpty ? "Ingrese una descripción" : null,
+          validator: (v) =>
+              v == null || v.isEmpty ? "Ingrese una descripción" : null,
         ),
         const SizedBox(height: 24),
 
@@ -236,12 +230,11 @@ class FormularioReporte extends StatelessWidget {
         ),
         const SizedBox(height: 32),
 
-        ElevatedButton(
-          onPressed: guardando ? null : onGuardar,
-          style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-          child: guardando
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text("Finalizar Reporte"),
+        GuardarButton(
+          loading: guardando,
+          text: 'Finalizar Reporte',
+          color: Theme.of(context).colorScheme.primary,
+          onPressed: onGuardar,
         ),
       ],
     );

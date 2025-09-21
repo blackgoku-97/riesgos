@@ -19,7 +19,7 @@ class ReporteService {
     int? severidad,
     int? potencial,
     required LatLng ubicacion,
-    String? urlImagen,
+    String? urlImagen, String? nivelPotencial,
   }) async {
     final data = {
       'cargo': cargo,
