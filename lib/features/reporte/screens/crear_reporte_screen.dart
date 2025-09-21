@@ -26,6 +26,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
   List<String> _lesiones = [];
   List<String> _accionesInseguras = [];
   List<String> _condicionesInseguras = [];
+  List<String> _medidas = [];
   int? _frecuencia, _severidad, _potencial;
   String? _nivelPotencial;
   File? _imagen;
@@ -88,6 +89,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
       clasificacion: _clasificacion,
       accionesInseguras: _accionesInseguras,
       condicionesInseguras: _condicionesInseguras,
+      medidas: _medidas,
       quienAfectado: _quienAfectado,
       descripcion: _descripcion,
       frecuencia: _frecuencia,
@@ -116,6 +118,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
         clasificacion: _clasificacion,
         accionesInseguras: _accionesInseguras,
         condicionesInseguras: _condicionesInseguras,
+        medidas: _medidas,
         quienAfectado: _quienAfectado!,
         descripcion: _descripcion!,
         frecuencia: _frecuencia,
@@ -162,6 +165,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           clasificacion: _clasificacion,
           accionesInsegurasSeleccionadas: _accionesInseguras,
           condicionesInsegurasSeleccionadas: _condicionesInseguras,
+          medidasSeleccionadas: _medidas,
           quienAfectado: _quienAfectado,
           descripcion: _descripcion,
           frecuencia: _frecuencia,
@@ -180,6 +184,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           onClasificacionChanged: (v) => setState(() => _clasificacion = v),
           onAccionesInsegurasChanged: (v) => setState(() => _accionesInseguras = v),
           onCondicionesInsegurasChanged: (v) => setState(() => _condicionesInseguras = v),
+          onMedidasChanged: (v) => setState(() => _medidas = v),
           onQuienChanged: (v) => setState(() => _quienAfectado = v),
           onDescripcionChanged: (v) => setState(() => _descripcion = v),
           onFrecuenciaChanged: (v) {

@@ -7,6 +7,7 @@ import 'frecuencia_severidad_fields.dart';
 import 'selector_dropdown.dart';
 import 'selector_lesiones.dart';
 import 'selector_clasificaciones.dart';
+import 'selector_medidas.dart';
 
 class FormularioReporte extends StatelessWidget {
   final String? cargo;
@@ -18,6 +19,7 @@ class FormularioReporte extends StatelessWidget {
   final String? clasificacion;
   final List<String> accionesInsegurasSeleccionadas;
   final List<String> condicionesInsegurasSeleccionadas;
+  final List<String> medidasSeleccionadas;
   final String? quienAfectado;
   final String? descripcion;
   final int? frecuencia;
@@ -38,6 +40,7 @@ class FormularioReporte extends StatelessWidget {
   final ValueChanged<String?> onClasificacionChanged;
   final ValueChanged<List<String>> onAccionesInsegurasChanged;
   final ValueChanged<List<String>> onCondicionesInsegurasChanged;
+  final ValueChanged<List<String>> onMedidasChanged;
   final ValueChanged<String?> onQuienChanged;
   final ValueChanged<String?> onDescripcionChanged;
   final ValueChanged<int?> onFrecuenciaChanged;
@@ -54,6 +57,7 @@ class FormularioReporte extends StatelessWidget {
     required this.clasificacion,
     required this.accionesInsegurasSeleccionadas,
     required this.condicionesInsegurasSeleccionadas,
+    required this.medidasSeleccionadas,
     required this.quienAfectado,
     required this.descripcion,
     required this.frecuencia,
@@ -72,6 +76,7 @@ class FormularioReporte extends StatelessWidget {
     required this.onClasificacionChanged,
     required this.onAccionesInsegurasChanged,
     required this.onCondicionesInsegurasChanged,
+    required this.onMedidasChanged,
     required this.onQuienChanged,
     required this.onDescripcionChanged,
     required this.onFrecuenciaChanged,
@@ -181,6 +186,13 @@ class FormularioReporte extends StatelessWidget {
             onChanged: onCondicionesInsegurasChanged,
           ),
 
+        const SizedBox(height: 24),
+
+        SelectorMedidas(
+          opciones: opcionesMedidas,
+          seleccionadas: medidasSeleccionadas,
+          onChanged: onMedidasChanged,
+        ),
         const SizedBox(height: 24),
 
         if (cargo?.toLowerCase() == "encargado de prevención de riesgos") ...[

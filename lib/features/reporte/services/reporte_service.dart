@@ -12,6 +12,7 @@ class ReporteService {
     String? clasificacion,
     List<String>? accionesInseguras,
     List<String>? condicionesInseguras,
+    List<String>? medidas,
     required String quienAfectado,
     required String descripcion,
     int? frecuencia,
@@ -30,6 +31,7 @@ class ReporteService {
       'clasificacion': clasificacion,
       'accionesInseguras': accionesInseguras ?? [],
       'condicionesInseguras': condicionesInseguras ?? [],
+      'medidas': medidas ?? [],
       'quienAfectado': quienAfectado,
       'descripcion': descripcion,
       'frecuencia': frecuencia,
@@ -46,5 +48,20 @@ class ReporteService {
 
   static Future<void> eliminar(String id) async {
     await FirebaseFirestore.instance.collection('reportes').doc(id).delete();
+  }
+
+  static Future<void> actualizar(String id, Map<String, dynamic> data) async {
+    await FirebaseFirestore.instance.collection('reportes').doc(id).update(data);
+  }
+
+  static Stream<QuerySnapshot<Map<String, dynamic>>> obtenerTodos() {
+    return FirebaseFirestore.instance
+        .collection('reportes')
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  static Future<DocumentSnapshot<Map<String, dynamic>>> obtenerPorId(String id) {
+    return FirebaseFirestore.instance.collection('reportes').doc(id).get();
   }
 }
