@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class SelectorPeligros extends StatelessWidget {
+class SelectorClasificaciones extends StatelessWidget {
   final String label;
   final List<String> opciones;
   final List<String> seleccionados;
   final ValueChanged<List<String>> onChanged;
 
-  const SelectorPeligros({
+  const SelectorClasificaciones({
     super.key,
     required this.label,
     required this.opciones,

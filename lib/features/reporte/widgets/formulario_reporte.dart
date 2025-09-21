@@ -6,7 +6,7 @@ import '../constants/opciones.dart';
 import 'frecuencia_severidad_fields.dart';
 import 'selector_dropdown.dart';
 import 'selector_lesiones.dart';
-import 'selector_peligros.dart';
+import 'selector_clasificaciones.dart';
 
 class FormularioReporte extends StatelessWidget {
   final String? cargo;
@@ -124,7 +124,7 @@ class FormularioReporte extends StatelessWidget {
         SelectorDropdown<String>(
           label: "¿A quién le ocurrió?",
           value: quienAfectado,
-          opciones: const ["Trabajador", "Visita", "Contratista"],
+          opciones: opcionesAQuienOcurrio,
           getLabel: (o) => o,
           onChanged: onQuienChanged,
         ),
@@ -166,7 +166,7 @@ class FormularioReporte extends StatelessWidget {
         const SizedBox(height: 20),
 
         if (clasificacion == "Acción Insegura")
-          SelectorPeligros(
+          SelectorClasificaciones(
             label: "Acciones Inseguras",
             opciones: accionesInseguras,
             seleccionados: accionesInsegurasSeleccionadas,
@@ -174,7 +174,7 @@ class FormularioReporte extends StatelessWidget {
           ),
 
         if (clasificacion == "Condición Insegura")
-          SelectorPeligros(
+          SelectorClasificaciones(
             label: "Condiciones Inseguras",
             opciones: condicionesInseguras,
             seleccionados: condicionesInsegurasSeleccionadas,

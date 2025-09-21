@@ -86,3 +86,12 @@ const condicionesInseguras = [
   "Asistencia/Soporte inadecuado",
   "Elementos/Sistema/Proceso de comunicación inadecuado",
 ];
+
+const opcionesAQuienOcurrio = [
+  "Jefe de Operaciones",
+  "Jefe de Mantención Hidraúlica",
+  "Soldador",
+  "Ayudante mecánica",
+  "Encargado de Prevención de Riesgos",
+  "Administrativo",
+];
