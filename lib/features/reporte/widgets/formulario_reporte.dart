@@ -5,17 +5,19 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../constants/opciones.dart';
 import 'frecuencia_severidad_fields.dart';
 import 'selector_dropdown.dart';
+import 'selector_lesiones.dart';
+import 'selector_peligros.dart';
 
 class FormularioReporte extends StatelessWidget {
   final String? cargo;
   final String? rol;
   final String? lugar;
   final String? tipoAccidente;
-  final String? lesion;
+  final List<String> lesionesSeleccionadas;
   final String? actividad;
   final String? clasificacion;
-  final String? accionInsegura;
-  final String? condicionInsegura;
+  final List<String> accionesInsegurasSeleccionadas;
+  final List<String> condicionesInsegurasSeleccionadas;
   final String? quienAfectado;
   final String? descripcion;
   final int? frecuencia;
@@ -31,11 +33,11 @@ class FormularioReporte extends StatelessWidget {
 
   final ValueChanged<String?> onLugarChanged;
   final ValueChanged<String?> onTipoAccidenteChanged;
-  final ValueChanged<String?> onLesionChanged;
+  final ValueChanged<List<String>> onLesionesChanged;
   final ValueChanged<String?> onActividadChanged;
   final ValueChanged<String?> onClasificacionChanged;
-  final ValueChanged<String?> onAccionInseguraChanged;
-  final ValueChanged<String?> onCondicionInseguraChanged;
+  final ValueChanged<List<String>> onAccionesInsegurasChanged;
+  final ValueChanged<List<String>> onCondicionesInsegurasChanged;
   final ValueChanged<String?> onQuienChanged;
   final ValueChanged<String?> onDescripcionChanged;
   final ValueChanged<int?> onFrecuenciaChanged;
@@ -47,11 +49,11 @@ class FormularioReporte extends StatelessWidget {
     required this.rol,
     required this.lugar,
     required this.tipoAccidente,
-    required this.lesion,
+    required this.lesionesSeleccionadas,
     required this.actividad,
     required this.clasificacion,
-    required this.accionInsegura,
-    required this.condicionInsegura,
+    required this.accionesInsegurasSeleccionadas,
+    required this.condicionesInsegurasSeleccionadas,
     required this.quienAfectado,
     required this.descripcion,
     required this.frecuencia,
@@ -65,11 +67,11 @@ class FormularioReporte extends StatelessWidget {
     required this.onGuardar,
     required this.onLugarChanged,
     required this.onTipoAccidenteChanged,
-    required this.onLesionChanged,
+    required this.onLesionesChanged,
     required this.onActividadChanged,
     required this.onClasificacionChanged,
-    required this.onAccionInseguraChanged,
-    required this.onCondicionInseguraChanged,
+    required this.onAccionesInsegurasChanged,
+    required this.onCondicionesInsegurasChanged,
     required this.onQuienChanged,
     required this.onDescripcionChanged,
     required this.onFrecuenciaChanged,
@@ -138,12 +140,10 @@ class FormularioReporte extends StatelessWidget {
         const SizedBox(height: 20),
 
         if (tipoAccidente != "Cuasi Accidente")
-          SelectorDropdown<String>(
-            label: "Tipo de lesión",
-            value: lesion,
+          SelectorLesiones(
             opciones: opcionesLesion,
-            getLabel: (o) => o,
-            onChanged: onLesionChanged,
+            seleccionadas: lesionesSeleccionadas,
+            onChanged: onLesionesChanged,
           ),
         if (tipoAccidente != "Cuasi Accidente") const SizedBox(height: 20),
 
@@ -156,7 +156,6 @@ class FormularioReporte extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // 🔄 Nueva sección: Clasificación
         SelectorDropdown<String>(
           label: "Clasificación",
           value: clasificacion,
@@ -167,21 +166,19 @@ class FormularioReporte extends StatelessWidget {
         const SizedBox(height: 20),
 
         if (clasificacion == "Acción Insegura")
-          SelectorDropdown<String>(
-            label: "Acción Insegura",
-            value: accionInsegura,
+          SelectorPeligros(
+            label: "Acciones Inseguras",
             opciones: accionesInseguras,
-            getLabel: (o) => o,
-            onChanged: onAccionInseguraChanged,
+            seleccionados: accionesInsegurasSeleccionadas,
+            onChanged: onAccionesInsegurasChanged,
           ),
 
         if (clasificacion == "Condición Insegura")
-          SelectorDropdown<String>(
-            label: "Condición Insegura",
-            value: condicionInsegura,
+          SelectorPeligros(
+            label: "Condiciones Inseguras",
             opciones: condicionesInseguras,
-            getLabel: (o) => o,
-            onChanged: onCondicionInseguraChanged,
+            seleccionados: condicionesInsegurasSeleccionadas,
+            onChanged: onCondicionesInsegurasChanged,
           ),
 
         const SizedBox(height: 24),

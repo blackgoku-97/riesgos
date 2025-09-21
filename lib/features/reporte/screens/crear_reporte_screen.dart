@@ -21,8 +21,11 @@ class CrearReporteScreen extends StatefulWidget {
 
 class _CrearReporteScreenState extends State<CrearReporteScreen> {
   String? _rol, _cargo;
-  String? _lugar, _tipoAccidente, _lesion, _actividad, _quienAfectado, _descripcion;
-  String? _clasificacion, _accionInsegura, _condicionInsegura;
+  String? _lugar, _tipoAccidente, _actividad, _quienAfectado, _descripcion;
+  String? _clasificacion;
+  List<String> _lesiones = [];
+  List<String> _accionesInseguras = [];
+  List<String> _condicionesInseguras = [];
   int? _frecuencia, _severidad, _potencial;
   String? _nivelPotencial;
   File? _imagen;
@@ -80,11 +83,11 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
     final error = ValidacionService.validarReporte(
       lugar: _lugar,
       tipoAccidente: _tipoAccidente,
-      lesion: _lesion,
+      lesiones: _lesiones,
       actividad: _actividad,
       clasificacion: _clasificacion,
-      accionInsegura: _accionInsegura,
-      condicionInsegura: _condicionInsegura,
+      accionesInseguras: _accionesInseguras,
+      condicionesInseguras: _condicionesInseguras,
       quienAfectado: _quienAfectado,
       descripcion: _descripcion,
       frecuencia: _frecuencia,
@@ -108,11 +111,11 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
         rol: rol,
         lugar: _lugar!,
         tipoAccidente: _tipoAccidente!,
-        lesion: _lesion,
+        lesiones: _lesiones,
         actividad: _actividad!,
         clasificacion: _clasificacion,
-        accionInsegura: _accionInsegura,
-        condicionInsegura: _condicionInsegura,
+        accionesInseguras: _accionesInseguras,
+        condicionesInseguras: _condicionesInseguras,
         quienAfectado: _quienAfectado!,
         descripcion: _descripcion!,
         frecuencia: _frecuencia,
@@ -154,11 +157,11 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           rol: _rol,
           lugar: _lugar,
           tipoAccidente: _tipoAccidente,
-          lesion: _lesion,
+          lesionesSeleccionadas: _lesiones,
           actividad: _actividad,
           clasificacion: _clasificacion,
-          accionInsegura: _accionInsegura,
-          condicionInsegura: _condicionInsegura,
+          accionesInsegurasSeleccionadas: _accionesInseguras,
+          condicionesInsegurasSeleccionadas: _condicionesInseguras,
           quienAfectado: _quienAfectado,
           descripcion: _descripcion,
           frecuencia: _frecuencia,
@@ -172,11 +175,11 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           onGuardar: _guardar,
           onLugarChanged: (v) => setState(() => _lugar = v),
           onTipoAccidenteChanged: (v) => setState(() => _tipoAccidente = v),
-          onLesionChanged: (v) => setState(() => _lesion = v),
+          onLesionesChanged: (v) => setState(() => _lesiones = v),
           onActividadChanged: (v) => setState(() => _actividad = v),
           onClasificacionChanged: (v) => setState(() => _clasificacion = v),
-          onAccionInseguraChanged: (v) => setState(() => _accionInsegura = v),
-          onCondicionInseguraChanged: (v) => setState(() => _condicionInsegura = v),
+          onAccionesInsegurasChanged: (v) => setState(() => _accionesInseguras = v),
+          onCondicionesInsegurasChanged: (v) => setState(() => _condicionesInseguras = v),
           onQuienChanged: (v) => setState(() => _quienAfectado = v),
           onDescripcionChanged: (v) => setState(() => _descripcion = v),
           onFrecuenciaChanged: (v) {
