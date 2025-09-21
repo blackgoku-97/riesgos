@@ -6,21 +6,20 @@ class UserInputFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    String text = newValue.text.trim();
+    final text = newValue.text.trim();
 
-    // Si contiene '@', tratamos como email → no tocamos nada
-    if (text.contains('@')) {
+    // Si contiene letras (a-z) o '@' → tratamos como email → no formatear
+    if (RegExp(r'[a-zA-Z@]').hasMatch(text)) {
       return newValue;
     }
 
-    // Si no contiene '@', tratamos como RUT
-    String clean = text.replaceAll(RegExp(r'[^0-9kK]'), '');
+    // Si no, tratamos como RUT
+    final clean = text.replaceAll(RegExp(r'[^0-9kK]'), '').toUpperCase();
 
     if (clean.isEmpty) {
       return newValue.copyWith(text: '');
     }
 
-    // Separar cuerpo y dígito verificador
     String body = clean;
     String dv = '';
     if (clean.length > 1) {
@@ -28,19 +27,20 @@ class UserInputFormatter extends TextInputFormatter {
       dv = clean.substring(clean.length - 1);
     }
 
-    // Insertar puntos cada 3 dígitos desde la derecha
     final buffer = StringBuffer();
-    for (int i = 0; i < body.length; i++) {
-      int position = body.length - i;
+    int counter = 0;
+    for (int i = body.length - 1; i >= 0; i--) {
       buffer.write(body[i]);
-      if (position > 1 && position % 3 == 1) {
+      counter++;
+      if (counter == 3 && i != 0) {
         buffer.write('.');
+        counter = 0;
       }
     }
 
-    String formatted = buffer.toString();
+    final reversed = buffer.toString().split('').reversed.join();
+    String formatted = reversed;
 
-    // Agregar guion si hay dígito verificador
     if (dv.isNotEmpty) {
       formatted += '-$dv';
     }
