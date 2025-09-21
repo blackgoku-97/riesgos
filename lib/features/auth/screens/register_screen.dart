@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
-import '../../auth/widgets/custom_text_field.dart';
+import '../../auth/widgets/user_field.dart';
 import '../../auth/widgets/password_field.dart';
-import '../../auth/widgets/rut_field.dart';
-import '../../auth/widgets/email_autocomplete_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,63 +15,91 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nombreController = TextEditingController();
   final _rutController = TextEditingController();
   final _cargoController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _userController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-
   final _authService = AuthService();
 
   bool _loading = false;
   String? _error;
 
+  bool _nombreValid = false;
+  bool _rutValid = false;
+  bool _cargoValid = false;
+  bool _userValid = false;
+  bool _passValid = false;
+  bool _confirmValid = false;
+
+  String? _nombreError;
+  String? _rutError;
+  String? _cargoError;
+  String? _userError;
+  String? _passwordError;
+  String? _confirmError;
+
   bool _obscurePass = true;
   bool _obscureConfirm = true;
-
-  bool _emailValid = false;
-  bool _rutValid = false;
-  bool _passValid = false;
-  bool _nombreValid = false;
-  bool _cargoValid = false;
-
-  String? _rutError;
-  String? _emailError;
-  String? _passwordError;
 
   @override
   void initState() {
     super.initState();
 
-    _emailController.addListener(() {
-      final text = _emailController.text.trim();
+    _nombreController.addListener(() {
+      final text = _nombreController.text.trim();
       if (text.isEmpty) {
-        _emailValid = false;
-        _emailError = null;
-      } else if (!_authService.isValidEmail(text)) {
-        _emailValid = false;
-        _emailError = 'El correo electrónico no es válido';
+        _nombreValid = false;
+        _nombreError = null;
+      } else if (!_authService.startsWithCapital(text)) {
+        _nombreValid = false;
+        _nombreError = 'Debe comenzar con mayúscula';
       } else {
-        _emailValid = true;
-        _emailError = null;
+        _nombreValid = true;
+        _nombreError = null;
       }
       setState(() {});
     });
 
     _rutController.addListener(() {
-      final text = _rutController.text.trim().toUpperCase();
-      final rutPattern = RegExp(r'^\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]$');
-
+      final text = _rutController.text.trim();
       if (text.isEmpty) {
         _rutValid = false;
         _rutError = null;
-      } else if (!rutPattern.hasMatch(text)) {
-        _rutValid = false;
-        _rutError = 'Formato inválido. Ej: 12.345.678-5';
       } else if (!_authService.isValidRUT(text)) {
         _rutValid = false;
-        _rutError = 'El RUT ingresado no es válido';
+        _rutError = 'RUT inválido';
       } else {
         _rutValid = true;
         _rutError = null;
+      }
+      setState(() {});
+    });
+
+    _cargoController.addListener(() {
+      final text = _cargoController.text.trim();
+      if (text.isEmpty) {
+        _cargoValid = false;
+        _cargoError = null;
+      } else if (!_authService.startsWithCapital(text)) {
+        _cargoValid = false;
+        _cargoError = 'Debe comenzar con mayúscula';
+      } else {
+        _cargoValid = true;
+        _cargoError = null;
+      }
+      setState(() {});
+    });
+
+    _userController.addListener(() {
+      final text = _userController.text.trim();
+      if (text.isEmpty) {
+        _userValid = false;
+        _userError = null;
+      } else if (!UserField.quickValidate(text, _authService)) {
+        _userValid = false;
+        _userError = 'Correo o RUT inválido';
+      } else {
+        _userValid = true;
+        _userError = null;
       }
       setState(() {});
     });
@@ -85,47 +111,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordError = null;
       } else if (!_authService.isValidPassword(text)) {
         _passValid = false;
-        _passwordError = 'Debe tener mínimo 8 caracteres, 1 mayúscula y 1 número';
+        _passwordError = 'Mínimo 8 caracteres, 1 mayúscula y 1 número';
       } else {
         _passValid = true;
         _passwordError = null;
       }
+      _validateConfirm();
       setState(() {});
     });
 
-    _nombreController.addListener(() {
-      _nombreValid = _authService.startsWithCapital(_nombreController.text.trim());
+    _confirmController.addListener(() {
+      _validateConfirm();
       setState(() {});
     });
-
-    _cargoController.addListener(() {
-      _cargoValid = _authService.startsWithCapital(_cargoController.text.trim());
-      setState(() {});
-    });
-
-    _confirmController.addListener(() => setState(() {}));
   }
 
-  bool get _confirmValid {
-    final c = _confirmController.text.trim();
-    return c.isNotEmpty && c == _passwordController.text.trim() && _passValid;
+  void _validateConfirm() {
+    final pass = _passwordController.text.trim();
+    final confirm = _confirmController.text.trim();
+    if (confirm.isEmpty) {
+      _confirmValid = false;
+      _confirmError = null;
+    } else if (confirm != pass) {
+      _confirmValid = false;
+      _confirmError = 'Las contraseñas no coinciden';
+    } else {
+      _confirmValid = true;
+      _confirmError = null;
+    }
   }
 
   bool get _formValid =>
-      _nombreValid && _rutValid && _cargoValid && _emailValid && _passValid && _confirmValid;
+      _nombreValid &&
+      _rutValid &&
+      _cargoValid &&
+      _userValid &&
+      _passValid &&
+      _confirmValid;
 
   Future<void> _register() async {
-    if (!_formValid) {
-      setState(() => _error = 'Por favor, completa todos los campos correctamente.');
-      return;
-    }
-
-    final nombre = _authService.capitalize(_nombreController.text.trim());
-    final rut = _rutController.text.trim().toUpperCase();
-    final cargo = _authService.capitalize(_cargoController.text.trim());
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-
     setState(() {
       _loading = true;
       _error = null;
@@ -133,30 +157,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       await _authService.registerUser(
-        nombre: nombre,
-        rut: rut,
-        cargo: cargo,
-        email: email,
-        password: password,
+        nombre: _nombreController.text.trim(),
+        rut: _rutController.text.trim(),
+        cargo: _cargoController.text.trim(),
+        email: _userController.text.trim(),
+        password: _passwordController.text.trim(),
       );
+
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pushReplacementNamed(context, '/dashboard');
     } catch (e) {
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _nombreController.dispose();
-    _rutController.dispose();
-    _cargoController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmController.dispose();
-    super.dispose();
   }
 
   @override
@@ -176,68 +190,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
-
-                CustomTextField(
+                TextField(
                   controller: _nombreController,
-                  label: 'Nombre completo',
-                  borderColor: _nombreController.text.isEmpty
-                      ? null
-                      : _nombreValid
-                          ? Colors.green
-                          : Colors.red,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Nombre',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    errorText: _nombreError,
+                  ),
                 ),
                 const SizedBox(height: 16),
-
-                RutField(
+                TextField(
                   controller: _rutController,
-                  isValid: _rutValid,
-                  errorText: _rutError,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'RUT',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    errorText: _rutError,
+                  ),
                 ),
                 const SizedBox(height: 16),
-
-                CustomTextField(
+                TextField(
                   controller: _cargoController,
-                  label: 'Cargo',
-                  borderColor: _cargoController.text.isEmpty
-                      ? null
-                      : _cargoValid
-                          ? Colors.green
-                          : Colors.red,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Cargo',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    errorText: _cargoError,
+                  ),
                 ),
                 const SizedBox(height: 16),
-
-                EmailAutocompleteField(
-                  controller: _emailController,
-                  isValid: _emailValid,
-                  errorText: _emailError,
+                UserField(
+                  controller: _userController,
+                  isValid: _userValid,
+                  errorText: _userError,
                 ),
                 const SizedBox(height: 16),
-
                 PasswordField(
                   controller: _passwordController,
                   label: 'Contraseña',
                   obscure: _obscurePass,
-                  onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
+                  onToggleVisibility: () =>
+                      setState(() => _obscurePass = !_obscurePass),
                   isValid: _passValid,
                   helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
                   errorText: _passwordError,
                 ),
                 const SizedBox(height: 16),
-
                 PasswordField(
                   controller: _confirmController,
                   label: 'Confirmar contraseña',
                   obscure: _obscureConfirm,
-                  onToggleVisibility: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                  onToggleVisibility: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
                   isValid: _confirmValid,
-                  helperText: _confirmController.text.isEmpty
-                      ? ''
-                      : _confirmValid
-                          ? 'Coincide con la contraseña'
-                          : 'Las contraseñas no coinciden',
+                  errorText: _confirmError,
                 ),
                 const SizedBox(height: 12),
-
                 if (_error != null)
                   Text(
                     _error!,
@@ -245,7 +254,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     textAlign: TextAlign.center,
                   ),
                 const SizedBox(height: 24),
-
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.rojo,
@@ -266,12 +274,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         )
                       : const Text(
-                          'Crear cuenta',
+                          'Registrarse',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, '/login'),
+                  child: const Text(
+                    '¿Ya tienes cuenta? Inicia sesión',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ),
               ],
             ),

@@ -69,12 +69,19 @@ class _UserFieldState extends State<UserField> {
         widget.controller.text = selection;
       },
       fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+        // 🔑 sincronizamos el controller externo con el interno
+        textEditingController.addListener(() {
+          if (widget.controller.text != textEditingController.text) {
+            widget.controller.value = textEditingController.value;
+          }
+        });
+
         return TextField(
-          controller: widget.controller,
+          controller: textEditingController, // 👈 usar el de Autocomplete
           focusNode: focusNode,
           style: const TextStyle(color: Colors.white),
           keyboardType: TextInputType.text,
-          inputFormatters: [UserInputFormatter()], // 👈 RUT formatter
+          inputFormatters: [UserInputFormatter()],
           decoration: InputDecoration(
             labelText: 'Correo o RUT',
             labelStyle: const TextStyle(color: Colors.white70),
@@ -84,7 +91,7 @@ class _UserFieldState extends State<UserField> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: widget.controller.text.isEmpty
+                color: textEditingController.text.isEmpty
                     ? Colors.transparent
                     : widget.isValid
                         ? Colors.green
@@ -95,7 +102,7 @@ class _UserFieldState extends State<UserField> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: widget.controller.text.isEmpty
+                color: textEditingController.text.isEmpty
                     ? Colors.blue
                     : widget.isValid
                         ? Colors.green

@@ -13,6 +13,9 @@ class FormularioReporte extends StatelessWidget {
   final String? tipoAccidente;
   final String? lesion;
   final String? actividad;
+  final String? clasificacion;
+  final String? accionInsegura;
+  final String? condicionInsegura;
   final String? quienAfectado;
   final String? descripcion;
   final int? frecuencia;
@@ -30,6 +33,9 @@ class FormularioReporte extends StatelessWidget {
   final ValueChanged<String?> onTipoAccidenteChanged;
   final ValueChanged<String?> onLesionChanged;
   final ValueChanged<String?> onActividadChanged;
+  final ValueChanged<String?> onClasificacionChanged;
+  final ValueChanged<String?> onAccionInseguraChanged;
+  final ValueChanged<String?> onCondicionInseguraChanged;
   final ValueChanged<String?> onQuienChanged;
   final ValueChanged<String?> onDescripcionChanged;
   final ValueChanged<int?> onFrecuenciaChanged;
@@ -43,6 +49,9 @@ class FormularioReporte extends StatelessWidget {
     required this.tipoAccidente,
     required this.lesion,
     required this.actividad,
+    required this.clasificacion,
+    required this.accionInsegura,
+    required this.condicionInsegura,
     required this.quienAfectado,
     required this.descripcion,
     required this.frecuencia,
@@ -58,6 +67,9 @@ class FormularioReporte extends StatelessWidget {
     required this.onTipoAccidenteChanged,
     required this.onLesionChanged,
     required this.onActividadChanged,
+    required this.onClasificacionChanged,
+    required this.onAccionInseguraChanged,
+    required this.onCondicionInseguraChanged,
     required this.onQuienChanged,
     required this.onDescripcionChanged,
     required this.onFrecuenciaChanged,
@@ -67,19 +79,17 @@ class FormularioReporte extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(20), // 👈 aire global
+      padding: const EdgeInsets.all(20),
       children: [
         Center(child: Image.asset("assets/images/logo.png", height: 60)),
         const SizedBox(height: 24),
 
-        // Sección: Perfil
         const Text("Datos del trabajador",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
         Text("Cargo: ${cargo ?? '—'}"),
         const SizedBox(height: 24),
 
-        // Sección: Ubicación
         const Text("Ubicación",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
@@ -95,7 +105,6 @@ class FormularioReporte extends StatelessWidget {
           ),
         const SizedBox(height: 24),
 
-        // Sección: Detalles del incidente
         const Text("Detalles del incidente",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
@@ -145,9 +154,38 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onActividadChanged,
         ),
+        const SizedBox(height: 20),
+
+        // 🔄 Nueva sección: Clasificación
+        SelectorDropdown<String>(
+          label: "Clasificación",
+          value: clasificacion,
+          opciones: opcionesClasificacion,
+          getLabel: (o) => o,
+          onChanged: onClasificacionChanged,
+        ),
+        const SizedBox(height: 20),
+
+        if (clasificacion == "Acción Insegura")
+          SelectorDropdown<String>(
+            label: "Acción Insegura",
+            value: accionInsegura,
+            opciones: accionesInseguras,
+            getLabel: (o) => o,
+            onChanged: onAccionInseguraChanged,
+          ),
+
+        if (clasificacion == "Condición Insegura")
+          SelectorDropdown<String>(
+            label: "Condición Insegura",
+            value: condicionInsegura,
+            opciones: condicionesInseguras,
+            getLabel: (o) => o,
+            onChanged: onCondicionInseguraChanged,
+          ),
+
         const SizedBox(height: 24),
 
-        // Sección: Evaluación de riesgo/potencial
         if (cargo?.toLowerCase() == "encargado de prevención de riesgos") ...[
           const Text("Evaluación de potencial",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
@@ -162,7 +200,6 @@ class FormularioReporte extends StatelessWidget {
           const SizedBox(height: 24),
         ],
 
-        // Sección: Descripción
         const Text("Descripción",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
@@ -178,7 +215,6 @@ class FormularioReporte extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        // Sección: Imagen
         const Text("Evidencia fotográfica",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         const SizedBox(height: 12),
@@ -191,7 +227,6 @@ class FormularioReporte extends StatelessWidget {
         ),
         const SizedBox(height: 32),
 
-        // Botón final
         ElevatedButton(
           onPressed: guardando ? null : onGuardar,
           style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(50)),

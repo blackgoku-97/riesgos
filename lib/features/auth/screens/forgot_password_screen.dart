@@ -46,7 +46,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String emailToUse = userInput;
 
-      // Si es RUT válido, resolver a email desde perfiles
       if (_authService.isValidRUT(userInput.toUpperCase())) {
         final perfilesRef = _authService.db.collection('perfiles');
         final query = await perfilesRef
@@ -69,7 +68,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _message = 'Se ha enviado un enlace de recuperación a $emailToUse';
       });
 
-      // ✅ Mostrar SnackBar de confirmación
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Enlace enviado a $emailToUse')),
@@ -107,15 +105,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-
-                // 👇 Ahora muestra errorText directamente
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
                   errorText: _error,
                 ),
                 const SizedBox(height: 16),
-
                 if (_message != null)
                   Text(
                     _message!,
@@ -123,7 +118,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     textAlign: TextAlign.center,
                   ),
                 const SizedBox(height: 24),
-
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.rojo,
@@ -151,7 +145,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ),
                         ),
                 ),
-
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => Navigator.pop(context),

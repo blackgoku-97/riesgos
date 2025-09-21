@@ -74,7 +74,6 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       String emailToUse = userInput;
 
-      // Si es RUT, buscar el email asociado en Firestore
       if (_authService.isValidRUT(userInput.toUpperCase())) {
         final perfilesRef = _authService.db.collection('perfiles');
         final query = await perfilesRef
@@ -116,26 +115,23 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
-
-                // 👇 Campo de usuario con RUT + Email + Autocomplete
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
                   errorText: _userError,
                 ),
                 const SizedBox(height: 16),
-
                 PasswordField(
                   controller: _passwordController,
                   label: 'Contraseña',
                   obscure: _obscurePass,
-                  onToggleVisibility: () => setState(() => _obscurePass = !_obscurePass),
+                  onToggleVisibility: () =>
+                      setState(() => _obscurePass = !_obscurePass),
                   isValid: _passValid,
                   helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
                   errorText: _passwordError,
                 ),
                 const SizedBox(height: 12),
-
                 if (_error != null)
                   Text(
                     _error!,
@@ -143,7 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: TextAlign.center,
                   ),
                 const SizedBox(height: 24),
-
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.rojo,
@@ -171,19 +166,19 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                 ),
-
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/forgot-password'),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/forgot-password'),
                   child: const Text(
                     '¿Olvidaste tu contraseña?',
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
-
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/register'),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/register'),
                   child: const Text(
                     '¿No tienes cuenta? Regístrate',
                     style: TextStyle(color: Colors.white70),

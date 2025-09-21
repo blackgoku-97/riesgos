@@ -6,8 +6,8 @@ class PasswordField extends StatelessWidget {
   final bool obscure;
   final VoidCallback onToggleVisibility;
   final bool isValid;
-  final String helperText;
   final String? errorText;
+  final String? helperText;
 
   const PasswordField({
     super.key,
@@ -16,8 +16,8 @@ class PasswordField extends StatelessWidget {
     required this.obscure,
     required this.onToggleVisibility,
     required this.isValid,
-    this.helperText = '',
     this.errorText,
+    this.helperText,
   });
 
   @override
@@ -31,9 +31,9 @@ class PasswordField extends StatelessWidget {
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
         fillColor: Colors.white10,
-        helperText: helperText.isNotEmpty ? helperText : null,
-        helperStyle: const TextStyle(color: Colors.white54),
-        errorText: errorText, // 👈 mensaje debajo del campo
+        helperText: helperText,
+        helperStyle: const TextStyle(color: Colors.white54, fontSize: 12),
+        errorText: errorText,
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off : Icons.visibility,

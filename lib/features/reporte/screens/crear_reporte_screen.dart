@@ -2,15 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../services/perfil_service.dart';
-import '../services/ubicacion_service.dart';
-import '../services/validacion_service.dart';
-import '../services/reporte_service.dart';
-import '../services/snack_service.dart';
-import '../services/imagen_service.dart';
-import '../services/storage_service.dart';
+import '../../reporte/services/perfil_service.dart';
+import '../../reporte/services/ubicacion_service.dart';
+import '../../reporte/services/validacion_service.dart';
+import '../../reporte/services/reporte_service.dart';
+import '../../reporte/services/snack_service.dart';
+import '../../reporte/services/imagen_service.dart';
+import '../../reporte/services/storage_service.dart';
 
-import '../widgets/formulario_reporte.dart';
+import '../../reporte/widgets/formulario_reporte.dart';
 
 class CrearReporteScreen extends StatefulWidget {
   const CrearReporteScreen({super.key});
@@ -22,8 +22,9 @@ class CrearReporteScreen extends StatefulWidget {
 class _CrearReporteScreenState extends State<CrearReporteScreen> {
   String? _rol, _cargo;
   String? _lugar, _tipoAccidente, _lesion, _actividad, _quienAfectado, _descripcion;
+  String? _clasificacion, _accionInsegura, _condicionInsegura;
   int? _frecuencia, _severidad, _potencial;
-  String? _nivelPotencial; // Texto: Bajo, Medio, Alto
+  String? _nivelPotencial;
   File? _imagen;
   LatLng? _ubicacion;
   bool _guardando = false;
@@ -81,6 +82,9 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
       tipoAccidente: _tipoAccidente,
       lesion: _lesion,
       actividad: _actividad,
+      clasificacion: _clasificacion,
+      accionInsegura: _accionInsegura,
+      condicionInsegura: _condicionInsegura,
       quienAfectado: _quienAfectado,
       descripcion: _descripcion,
       frecuencia: _frecuencia,
@@ -106,6 +110,9 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
         tipoAccidente: _tipoAccidente!,
         lesion: _lesion,
         actividad: _actividad!,
+        clasificacion: _clasificacion,
+        accionInsegura: _accionInsegura,
+        condicionInsegura: _condicionInsegura,
         quienAfectado: _quienAfectado!,
         descripcion: _descripcion!,
         frecuencia: _frecuencia,
@@ -149,6 +156,9 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           tipoAccidente: _tipoAccidente,
           lesion: _lesion,
           actividad: _actividad,
+          clasificacion: _clasificacion,
+          accionInsegura: _accionInsegura,
+          condicionInsegura: _condicionInsegura,
           quienAfectado: _quienAfectado,
           descripcion: _descripcion,
           frecuencia: _frecuencia,
@@ -164,6 +174,9 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           onTipoAccidenteChanged: (v) => setState(() => _tipoAccidente = v),
           onLesionChanged: (v) => setState(() => _lesion = v),
           onActividadChanged: (v) => setState(() => _actividad = v),
+          onClasificacionChanged: (v) => setState(() => _clasificacion = v),
+          onAccionInseguraChanged: (v) => setState(() => _accionInsegura = v),
+          onCondicionInseguraChanged: (v) => setState(() => _condicionInsegura = v),
           onQuienChanged: (v) => setState(() => _quienAfectado = v),
           onDescripcionChanged: (v) => setState(() => _descripcion = v),
           onFrecuenciaChanged: (v) {
