@@ -77,15 +77,13 @@ class FormularioPlanificacion extends StatelessWidget {
 
     return ListView(
       children: [
-        TextFormField(
-          initialValue: cargo ?? '',
-          readOnly: true,
-          decoration: const InputDecoration(
-            labelText: 'Cargo',
-            border: OutlineInputBorder(),
-          ),
-        ),
+        // 👇 Aquí cambiamos el TextFormField por un Text simple
+        const Text("Datos del trabajador",
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         espacio,
+        Text("Cargo: ${cargo ?? '—'}"),
+        espacio,
+
         TextFormField(
           controller: planTrabajoCtrl,
           decoration: const InputDecoration(
@@ -94,6 +92,7 @@ class FormularioPlanificacion extends StatelessWidget {
           ),
         ),
         espacio,
+
         SelectorDropdown<String>(
           label: 'Área',
           value: areaSel,
