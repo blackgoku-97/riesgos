@@ -8,17 +8,9 @@ class UserInputFormatter extends TextInputFormatter {
   ) {
     String text = newValue.text.trim();
 
-    // Si contiene '@', tratamos como email
+    // Si contiene '@', tratamos como email → no tocamos nada
     if (text.contains('@')) {
-      // Asegurar que solo haya un '@'
-      final parts = text.split('@');
-      if (parts.length > 2) {
-        text = '${parts[0]}@${parts.sublist(1).join('')}';
-      }
-      return TextEditingValue(
-        text: text,
-        selection: TextSelection.collapsed(offset: text.length),
-      );
+      return newValue;
     }
 
     // Si no contiene '@', tratamos como RUT

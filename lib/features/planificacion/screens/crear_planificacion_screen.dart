@@ -2,28 +2,29 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../planificacion/services/validacion_service.dart';
-import '../planificacion/services/planificacion_service.dart';
-import '../planificacion/services/perfil_service.dart';
-import '../planificacion/services/ubicacion_service.dart';
-import '../planificacion/services/snack_service.dart';
-import '../planificacion/services/imagen_service.dart';
-import '../planificacion/services/storage_service.dart';
+import '../services/validacion_service.dart';
+import '../services/planificacion_service.dart';
+import '../services/perfil_service.dart';
+import '../services/ubicacion_service.dart';
+import '../services/snack_service.dart';
+import '../services/imagen_service.dart';
+import '../services/storage_service.dart';
 
-import '../planificacion/widgets/formulario_planificacion.dart';
+import '../widgets/formulario_planificacion.dart';
 
-class DuplicarPlanificacionScreen extends StatefulWidget {
-  final Map<String, dynamic> planificacion;
-  const DuplicarPlanificacionScreen({super.key, required this.planificacion, required data, required origenId});
+class CrearPlanificacionScreen extends StatefulWidget {
+  const CrearPlanificacionScreen({super.key});
 
   @override
-  State<DuplicarPlanificacionScreen> createState() => _DuplicarPlanificacionScreenState();
+  State<CrearPlanificacionScreen> createState() => _CrearPlanificacionScreenState();
 }
 
-class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScreen> {
-  late TextEditingController _planTrabajoCtrl;
+class _CrearPlanificacionScreenState extends State<CrearPlanificacionScreen> {
+  final _planTrabajoCtrl = TextEditingController();
   String? _areaSel, _procesoSel, _actividadSel, _rol, _cargo, _riesgoAuto;
-  late List<String> _peligrosSel, _agenteSel, _medidasSel;
+  final _peligrosSel = <String>[];
+  final _agenteSel = <String>[];
+  final _medidasSel = <String>[];
   int? _frecuencia, _severidad;
   File? _imagen;
   LatLng? _ubicacion;
@@ -32,23 +33,14 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
   @override
   void initState() {
     super.initState();
-    final p = widget.planificacion;
-    _planTrabajoCtrl = TextEditingController(text: p['planTrabajo'] ?? '');
-    _areaSel = p['area'];
-    _procesoSel = p['proceso'];
-    _actividadSel = p['actividad'];
-    _peligrosSel = List<String>.from(p['peligros'] ?? []);
-    _agenteSel = List<String>.from(p['agenteMaterial'] ?? []);
-    _medidasSel = List<String>.from(p['medidas'] ?? []);
-    _frecuencia = p['frecuencia'];
-    _severidad = p['severidad'];
-    _riesgoAuto = p['nivelRiesgo'];
-    if (p['ubicacion'] != null) {
-      final u = p['ubicacion'];
-      _ubicacion = LatLng(u.latitude, u.longitude);
-    }
     _cargarPerfil();
-    if (_ubicacion == null) _obtenerUbicacion();
+    _obtenerUbicacion();
+  }
+
+  @override
+  void dispose() {
+    _planTrabajoCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _cargarPerfil() async {
@@ -106,18 +98,17 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
       cargo: cargo,
       frecuencia: _frecuencia,
       severidad: _severidad,
-      imagen: _imagen ?? (widget.planificacion['urlImagen'] != null ? File('') : null),
+      imagen: _imagen,
     );
     if (error != null) return SnackService.mostrar(context, error);
     setState(() => _guardando = true);
     try {
-      String? urlImagen = widget.planificacion['urlImagen'];
-      if (_imagen != null) {
-        urlImagen = await StorageService.uploadFile(
-          file: _imagen!,
-          path: 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg',
-        );
-      }
+      final urlImagen = _imagen != null
+          ? await StorageService.uploadFile(
+              file: _imagen!,
+              path: 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg',
+            )
+          : null;
       await PlanificacionService.guardar(
         cargo: cargo,
         rol: rol,
@@ -135,11 +126,11 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
         urlImagen: urlImagen,
       );
       if (!mounted) return;
-      SnackService.mostrar(context, 'Planificación duplicada con éxito', success: true);
+      SnackService.mostrar(context, 'Planificación guardada con éxito', success: true);
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        SnackService.mostrar(context, 'Error al duplicar: $e');
+        SnackService.mostrar(context, 'Error al guardar: $e');
         setState(() => _guardando = false);
       }
     }
@@ -149,7 +140,7 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Duplicar planificación'),
+        title: const Text('Crear planificación'),
         actions: [
           IconButton(
             icon: const Icon(Icons.my_location),

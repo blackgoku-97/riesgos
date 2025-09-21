@@ -2,15 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../reporte/services/perfil_service.dart';
-import '../reporte/services/ubicacion_service.dart';
-import '../reporte/services/validacion_service.dart';
-import '../reporte/services/reporte_service.dart';
-import '../reporte/services/snack_service.dart';
-import '../reporte/services/imagen_service.dart';
-import '../reporte/services/storage_service.dart';
+import '../services/perfil_service.dart';
+import '../services/ubicacion_service.dart';
+import '../services/validacion_service.dart';
+import '../services/reporte_service.dart';
+import '../services/snack_service.dart';
+import '../services/imagen_service.dart';
+import '../services/storage_service.dart';
 
-import '../reporte/widgets/formulario_reporte.dart';
+import '../widgets/formulario_reporte.dart';
 
 class CrearReporteScreen extends StatefulWidget {
   const CrearReporteScreen({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'rut_input_formatter.dart';
+import '../formatters/rut_input_formatter.dart';
 
 class RutField extends StatelessWidget {
   final TextEditingController controller;

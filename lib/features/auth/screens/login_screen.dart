@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../auth/services/auth_service.dart';
-import '../auth/widgets/password_field.dart';
-import '../auth/widgets/user_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../auth/services/auth_service.dart';
+import '../../auth/widgets/password_field.dart';
+import '../../auth/widgets/user_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -117,6 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
 
+                // 👇 Campo de usuario con RUT + Email + Autocomplete
                 UserField(
                   controller: _userController,
                   isValid: _userValid,

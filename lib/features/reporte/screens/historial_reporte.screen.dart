@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../reporte/services/reporte_service.dart';
-import '../reporte/services/snack_service.dart';
+import '../services/reporte_service.dart';
+import '../services/snack_service.dart';
 
 class HistorialReportesScreen extends StatelessWidget {
   const HistorialReportesScreen({super.key});

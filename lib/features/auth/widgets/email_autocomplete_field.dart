@@ -1,40 +1,33 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../formatters/user_input_formatter.dart';
-import '../services/auth_service.dart';
 
-class UserField extends StatefulWidget {
+class EmailAutocompleteField extends StatefulWidget {
   final TextEditingController controller;
   final bool isValid;
   final String? errorText;
 
-  const UserField({
+  const EmailAutocompleteField({
     super.key,
     required this.controller,
     required this.isValid,
     this.errorText,
   });
 
-  /// Validación rápida: acepta email válido o RUT válido
-  static bool quickValidate(String input, AuthService authService) {
-    final text = input.trim();
-    if (text.isEmpty) return false;
-    return authService.isValidEmail(text) || authService.isValidRUT(text.toUpperCase());
-  }
-
   @override
-  State<UserField> createState() => _UserFieldState();
+  State<EmailAutocompleteField> createState() => _EmailAutocompleteFieldState();
 }
 
-class _UserFieldState extends State<UserField> {
+class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
   final List<String> dominios = ['gmail.com', 'outlook.com', 'hotmail.com', 'phos-chek.cl'];
 
   Timer? _debounce;
   Iterable<String> _options = const [];
 
   void _onTextChanged(String value) {
+    // Cancelar debounce previo
     _debounce?.cancel();
 
+    // Esperar 150ms antes de calcular sugerencias
     _debounce = Timer(const Duration(milliseconds: 150), () {
       if (!value.contains('@')) {
         setState(() => _options = const []);
@@ -72,11 +65,10 @@ class _UserFieldState extends State<UserField> {
         return TextField(
           controller: widget.controller,
           focusNode: focusNode,
+          keyboardType: TextInputType.emailAddress,
           style: const TextStyle(color: Colors.white),
-          keyboardType: TextInputType.text,
-          inputFormatters: [UserInputFormatter()], // 👈 RUT formatter
           decoration: InputDecoration(
-            labelText: 'Correo o RUT',
+            labelText: 'Correo electrónico',
             labelStyle: const TextStyle(color: Colors.white70),
             filled: true,
             fillColor: Colors.white10,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../auth/services/auth_service.dart';
-import '../auth/widgets/custom_text_field.dart';
-import '../auth/widgets/password_field.dart';
-import '../auth/widgets/rut_field.dart';
-import '../auth/widgets/email_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../auth/services/auth_service.dart';
+import '../../auth/widgets/custom_text_field.dart';
+import '../../auth/widgets/password_field.dart';
+import '../../auth/widgets/rut_field.dart';
+import '../../auth/widgets/email_autocomplete_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -206,7 +206,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                EmailField(
+                EmailAutocompleteField(
                   controller: _emailController,
                   isValid: _emailValid,
                   errorText: _emailError,

@@ -4,16 +4,16 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'firebase_options.dart';
 
 import 'features/welcome/welcome_screen.dart';
-import 'features/auth/login_screen.dart';
-import 'features/auth/register_screen.dart';
-import 'features/auth/forgot_password_screen.dart';
+import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/register_screen.dart';
+import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
-import 'features/planificacion/crear_planificacion_screen.dart';
-import 'features/planificacion/historial_planificacion_screen.dart';
-import 'features/planificacion/duplicar_planificacion_screen.dart';
-import 'features/reporte/crear_reporte_screen.dart';
-import 'features/reporte/historial_reporte.screen.dart';
-import 'features/users/ver_usuarios_screen.dart';
+import 'features/planificacion/screens/crear_planificacion_screen.dart';
+import 'features/planificacion/screens/historial_planificacion_screen.dart';
+import 'features/planificacion/screens/duplicar_planificacion_screen.dart';
+import 'features/reporte/screens/crear_reporte_screen.dart';
+import 'features/reporte/screens/historial_reporte.screen.dart';
+import 'features/users/screens/ver_usuarios_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

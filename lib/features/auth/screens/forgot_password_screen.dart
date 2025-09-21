@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
-import '../auth/services/auth_service.dart';
-import '../auth/widgets/user_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../services/auth_service.dart';
+import '../widgets/user_field.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -46,7 +46,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String emailToUse = userInput;
 
-      // Si el usuario ingresó RUT válido, resolver a email desde perfiles
+      // Si es RUT válido, resolver a email desde perfiles
       if (_authService.isValidRUT(userInput.toUpperCase())) {
         final perfilesRef = _authService.db.collection('perfiles');
         final query = await perfilesRef
@@ -64,9 +64,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       }
 
       await _authService.sendPasswordReset(emailToUse);
+
       setState(() {
         _message = 'Se ha enviado un enlace de recuperación a $emailToUse';
       });
+
+      // ✅ Mostrar SnackBar de confirmación
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Enlace enviado a $emailToUse')),
+        );
+      }
     } catch (e) {
       setState(() {
         _error = e.toString().replaceFirst('Exception: ', '');
@@ -100,18 +108,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 24),
 
+                // 👇 Ahora muestra errorText directamente
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
+                  errorText: _error,
                 ),
                 const SizedBox(height: 16),
 
-                if (_error != null)
-                  Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.redAccent),
-                    textAlign: TextAlign.center,
-                  ),
                 if (_message != null)
                   Text(
                     _message!,

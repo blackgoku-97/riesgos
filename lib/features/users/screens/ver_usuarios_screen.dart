@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../core/theme/app_colors.dart';
-import '../auth/login_screen.dart';
-import 'widgets/user_list_tile.dart';
-import 'widgets/user_search_bar.dart';
-import 'widgets/user_edit_dialog.dart';
-import 'widgets/confirm_delete_dialog.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../auth/screens/login_screen.dart';
+import '../widgets/user_list_tile.dart';
+import '../widgets/user_search_bar.dart';
+import '../widgets/user_edit_dialog.dart';
+import '../widgets/confirm_delete_dialog.dart';
 
 class VerUsuariosScreen extends StatefulWidget {
   const VerUsuariosScreen({super.key});
