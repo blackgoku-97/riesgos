@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class ReporteService {
   static Future<void> guardar({
     required String cargo,
-    required String rol,
+    required String? rol,
     required String lugar,
     required String tipoAccidente,
     required List<String> lesiones,
@@ -18,10 +20,29 @@ class ReporteService {
     int? frecuencia,
     int? severidad,
     int? potencial,
+    String? nivelPotencial,
     required LatLng ubicacion,
-    String? urlImagen, String? nivelPotencial,
+    String? urlImagen,
   }) async {
-    final data = {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception('Usuario no autenticado');
+
+    // Contar reportes existentes para generar el número correlativo
+    final countSnap = await FirebaseFirestore.instance
+        .collection('reportes')
+        .count()
+        .get();
+
+    final numero = (countSnap.count ?? 0) + 1;
+    final numeroFormateado = numero.toString().padLeft(3, '0'); // 001, 002, 003...
+    final anio = DateTime.now().year;
+    final numeroReporte = 'Reporte $numeroFormateado - $anio';
+
+    await FirebaseFirestore.instance.collection('reportes').add({
+      'numeroReporte': numeroReporte,
+      'año': anio,
+      'fechaReporteLocal':
+          DateFormat('dd/MM/yyyy', 'es_CL').format(DateTime.now()),
       'cargo': cargo,
       'rol': rol,
       'lugar': lugar,
@@ -29,39 +50,19 @@ class ReporteService {
       'lesiones': lesiones,
       'actividad': actividad,
       'clasificacion': clasificacion,
-      'accionesInseguras': accionesInseguras ?? [],
-      'condicionesInseguras': condicionesInseguras ?? [],
-      'medidas': medidas ?? [],
+      'accionesInseguras': accionesInseguras,
+      'condicionesInseguras': condicionesInseguras,
+      'medidas': medidas,
       'quienAfectado': quienAfectado,
       'descripcion': descripcion,
       'frecuencia': frecuencia,
       'severidad': severidad,
       'potencial': potencial,
-      'latitud': ubicacion.latitude,
-      'longitud': ubicacion.longitude,
-      'imagen': urlImagen,
+      'nivelPotencial': nivelPotencial,
+      'ubicacion': GeoPoint(ubicacion.latitude, ubicacion.longitude),
+      'urlImagen': urlImagen,
+      'uid': user.uid,
       'createdAt': FieldValue.serverTimestamp(),
-    };
-
-    await FirebaseFirestore.instance.collection('reportes').add(data);
-  }
-
-  static Future<void> eliminar(String id) async {
-    await FirebaseFirestore.instance.collection('reportes').doc(id).delete();
-  }
-
-  static Future<void> actualizar(String id, Map<String, dynamic> data) async {
-    await FirebaseFirestore.instance.collection('reportes').doc(id).update(data);
-  }
-
-  static Stream<QuerySnapshot<Map<String, dynamic>>> obtenerTodos() {
-    return FirebaseFirestore.instance
-        .collection('reportes')
-        .orderBy('createdAt', descending: true)
-        .snapshots();
-  }
-
-  static Future<DocumentSnapshot<Map<String, dynamic>>> obtenerPorId(String id) {
-    return FirebaseFirestore.instance.collection('reportes').doc(id).get();
+    });
   }
 }
