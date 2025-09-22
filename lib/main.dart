@@ -40,25 +40,35 @@ class MyApp extends StatelessWidget {
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/planificacion': (context) => const CrearPlanificacionScreen(),
-        '/historial_planificaciones': (context) => const HistorialPlanificacionesScreen(),
+        '/historial_planificaciones': (context) =>
+            const HistorialPlanificacionesScreen(),
+
+        // 👇 Manejo seguro de argumentos
         '/duplicar_planificacion': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments;
+          final planificacion = (args is Map<String, dynamic>)
+              ? args['planificacion'] as Map<String, dynamic>? ?? {}
+              : <String, dynamic>{};
+
           return DuplicarPlanificacionScreen(
-            data: args['data'],
-            origenId: args['origenId'],
-            planificacion: {},
+            planificacion: planificacion,
           );
         },
+
         '/reporte': (context) => const CrearReporteScreen(),
         '/historial_reportes': (context) => const HistorialReportesScreen(),
+
         '/duplicar_reporte': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          final args = ModalRoute.of(context)!.settings.arguments;
+          final reporte = (args is Map<String, dynamic>)
+              ? args['reporte'] as Map<String, dynamic>? ?? {}
+              : <String, dynamic>{};
+
           return DuplicarReporteScreen(
-            data: args['data'],
-            origenId: args['origenId'],
-            reporte: {},
+            reporte: reporte,
           );
         },
+
         '/ver_usuarios': (context) => const VerUsuariosScreen(),
       },
     );

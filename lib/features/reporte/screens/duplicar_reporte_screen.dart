@@ -14,11 +14,10 @@ import '../../reporte/widgets/formulario_reporte.dart';
 
 class DuplicarReporteScreen extends StatefulWidget {
   final Map<String, dynamic> reporte;
+
   const DuplicarReporteScreen({
     super.key,
     required this.reporte,
-    required data,
-    required origenId,
   });
 
   @override
@@ -43,6 +42,7 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
   void initState() {
     super.initState();
     final r = widget.reporte;
+
     _lugar = r['lugar'];
     _tipoAccidente = r['tipoAccidente'];
     _actividad = r['actividad'];
@@ -57,12 +57,15 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
     _severidad = r['severidad'];
     _potencial = r['potencial'];
     _nivelPotencial = r['nivelPotencial'];
+
     if (r['ubicacion'] != null) {
       final u = r['ubicacion'];
       _ubicacion = LatLng(u.latitude, u.longitude);
     }
+
     _cargarPerfil();
-    if (_ubicacion == null) _obtenerUbicacion();
+    // 👇 Eliminado: no forzamos ubicación actual, se mantiene la original
+    // if (_ubicacion == null) _obtenerUbicacion();
   }
 
   Future<void> _cargarPerfil() async {
@@ -102,8 +105,10 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
     final cargo = _cargo;
     final rol = _rol;
     final ubicacion = _ubicacion;
+
     if (rol == null || cargo == null || ubicacion == null) {
-      return SnackService.mostrar(context, 'No se pudo obtener perfil o ubicación');
+      return SnackService.mostrar(
+          context, 'No se pudo obtener perfil o ubicación');
     }
 
     final error = ValidacionService.validarReporte(
@@ -120,13 +125,16 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
       frecuencia: _frecuencia,
       severidad: _severidad,
       potencial: _potencial,
-      imagen: _imagen ?? (widget.reporte['urlImagen'] != null ? File('') : null),
+      imagen: _imagen,
     );
+
     if (error != null) return SnackService.mostrar(context, error);
 
     setState(() => _guardando = true);
+
     try {
       String? urlImagen = widget.reporte['urlImagen'];
+
       if (_imagen != null) {
         urlImagen = await StorageService.uploadFile(
           file: _imagen!,
@@ -156,7 +164,8 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
       );
 
       if (!mounted) return;
-      SnackService.mostrar(context, 'Reporte duplicado con éxito', success: true);
+      SnackService.mostrar(context, 'Reporte duplicado con éxito',
+          success: true);
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -209,8 +218,10 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
           onLesionesChanged: (v) => setState(() => _lesiones = v),
           onActividadChanged: (v) => setState(() => _actividad = v),
           onClasificacionChanged: (v) => setState(() => _clasificacion = v),
-          onAccionesInsegurasChanged: (v) => setState(() => _accionesInseguras = v),
-          onCondicionesInsegurasChanged: (v) => setState(() => _condicionesInseguras = v),
+          onAccionesInsegurasChanged: (v) =>
+              setState(() => _accionesInseguras = v),
+          onCondicionesInsegurasChanged: (v) =>
+              setState(() => _condicionesInseguras = v),
           onMedidasChanged: (v) => setState(() => _medidas = v),
           onQuienChanged: (v) => setState(() => _quienAfectado = v),
           onDescripcionChanged: (v) => setState(() => _descripcion = v),

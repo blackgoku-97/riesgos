@@ -33,11 +33,14 @@ class DeleteUtilsReporte {
       );
 
       try {
+        // 🔑 Borrar imagen de Storage si existe
         if (urlImagen != null && urlImagen.isNotEmpty) {
           final ref =
               firebase_storage.FirebaseStorage.instance.refFromURL(urlImagen);
           await ref.delete();
         }
+
+        // 🔑 Borrar documento de Firestore
         await FirebaseFirestore.instance
             .collection('reportes')
             .doc(id)

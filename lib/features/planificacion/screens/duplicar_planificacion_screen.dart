@@ -14,13 +14,19 @@ import '../widgets/formulario_planificacion.dart';
 
 class DuplicarPlanificacionScreen extends StatefulWidget {
   final Map<String, dynamic> planificacion;
-  const DuplicarPlanificacionScreen({super.key, required this.planificacion, required data, required origenId});
+
+  const DuplicarPlanificacionScreen({
+    super.key,
+    required this.planificacion,
+  });
 
   @override
-  State<DuplicarPlanificacionScreen> createState() => _DuplicarPlanificacionScreenState();
+  State<DuplicarPlanificacionScreen> createState() =>
+      _DuplicarPlanificacionScreenState();
 }
 
-class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScreen> {
+class _DuplicarPlanificacionScreenState
+    extends State<DuplicarPlanificacionScreen> {
   late TextEditingController _planTrabajoCtrl;
   String? _areaSel, _procesoSel, _actividadSel, _rol, _cargo, _riesgoAuto;
   late List<String> _peligrosSel, _agenteSel, _medidasSel;
@@ -33,6 +39,7 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
   void initState() {
     super.initState();
     final p = widget.planificacion;
+
     _planTrabajoCtrl = TextEditingController(text: p['planTrabajo'] ?? '');
     _areaSel = p['area'];
     _procesoSel = p['proceso'];
@@ -43,12 +50,15 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
     _frecuencia = p['frecuencia'];
     _severidad = p['severidad'];
     _riesgoAuto = p['nivelRiesgo'];
+
     if (p['ubicacion'] != null) {
       final u = p['ubicacion'];
       _ubicacion = LatLng(u.latitude, u.longitude);
     }
+
     _cargarPerfil();
-    if (_ubicacion == null) _obtenerUbicacion();
+    // 👇 Eliminado: no forzamos ubicación actual, se mantiene la original
+    // if (_ubicacion == null) _obtenerUbicacion();
   }
 
   Future<void> _cargarPerfil() async {
@@ -90,9 +100,12 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
     final cargo = _cargo;
     final rol = _rol;
     final ubicacion = _ubicacion;
+
     if (rol == null || ubicacion == null || cargo == null) {
-      return SnackService.mostrar(context, 'No se pudo obtener el rol, cargo o la ubicación');
+      return SnackService.mostrar(
+          context, 'No se pudo obtener el rol, cargo o la ubicación');
     }
+
     final error = ValidacionService.validar(
       plan: _planTrabajoCtrl.text,
       area: _areaSel,
@@ -106,18 +119,23 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
       cargo: cargo,
       frecuencia: _frecuencia,
       severidad: _severidad,
-      imagen: _imagen ?? (widget.planificacion['urlImagen'] != null ? File('') : null),
+      imagen: _imagen,
     );
+
     if (error != null) return SnackService.mostrar(context, error);
+
     setState(() => _guardando = true);
+
     try {
       String? urlImagen = widget.planificacion['urlImagen'];
+
       if (_imagen != null) {
         urlImagen = await StorageService.uploadFile(
           file: _imagen!,
           path: 'planificaciones/${DateTime.now().millisecondsSinceEpoch}.jpg',
         );
       }
+
       await PlanificacionService.guardar(
         cargo: cargo,
         rol: rol,
@@ -134,8 +152,10 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
         nivelRiesgo: _riesgoAuto,
         urlImagen: urlImagen,
       );
+
       if (!mounted) return;
-      SnackService.mostrar(context, 'Planificación duplicada con éxito', success: true);
+      SnackService.mostrar(context, 'Planificación duplicada con éxito',
+          success: true);
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -179,13 +199,8 @@ class _DuplicarPlanificacionScreenState extends State<DuplicarPlanificacionScree
           onTomarFoto: _tomarFoto,
           onGuardar: _guardar,
           onAreaChanged: (v) {
-            setState(() {
-              _areaSel = v;
-              _procesoSel = null;
-              _actividadSel = null;
-              _peligrosSel.clear();
-              _agenteSel.clear();
-            });
+            // 👇 Ya no reseteamos todo, mantenemos datos originales
+            setState(() => _areaSel = v);
           },
           onProcesoChanged: (v) => setState(() => _procesoSel = v),
           onActividadChanged: (v) => setState(() => _actividadSel = v),
