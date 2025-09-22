@@ -57,13 +57,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
   void _calcularPotencial() {
     if (_frecuencia != null && _severidad != null) {
       _potencial = _frecuencia! * _severidad!;
-      if (_potencial! <= 4) {
-        _nivelPotencial = 'Bajo';
-      } else if (_potencial! <= 9) {
-        _nivelPotencial = 'Medio';
-      } else {
-        _nivelPotencial = 'Alto';
-      }
+      _nivelPotencial = _potencial! >= 6 ? 'Bajo' : 'Alto';
       setState(() {});
     }
   }

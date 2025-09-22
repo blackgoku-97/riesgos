@@ -36,7 +36,6 @@ class TarjetaUtilsReporte extends StatelessWidget {
     final info = [
       '📅 Fecha: ${data['fechaReporteLocal'] ?? ''}',
       '👤 Cargo: ${data['cargo'] ?? ''}',
-      '🧑 Rol: ${data['rol'] ?? ''}',
       '📍 Lugar: ${data['lugar'] ?? ''}',
       '💥 Tipo de Accidente: ${data['tipoAccidente'] ?? ''}',
       '🤕 Lesiones: ${(data['lesiones'] as List?)?.join(", ") ?? "—"}',
@@ -49,8 +48,7 @@ class TarjetaUtilsReporte extends StatelessWidget {
       '📝 Descripción: ${data['descripcion'] ?? ''}',
       '📈 Frecuencia: ${data['frecuencia'] ?? ''}',
       '📉 Severidad: ${data['severidad'] ?? ''}',
-      '🔥 Potencial: ${data['potencial'] ?? ''}',
-      '🚨 Nivel Potencial: ${data['nivelPotencial'] ?? ''}',
+      '🔥 Potencial: ${data['nivelPotencial'] ?? ''}',
     ];
 
     return Card(
