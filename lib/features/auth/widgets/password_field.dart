@@ -1,39 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class PasswordField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final bool obscure;
   final VoidCallback onToggleVisibility;
-  final bool isValid;
-  final String? errorText;
-  final String? helperText;
 
   const PasswordField({
     super.key,
     required this.controller,
     required this.label,
     required this.obscure,
-    required this.onToggleVisibility,
-    required this.isValid,
-    this.errorText,
-    this.helperText,
+    required this.onToggleVisibility, required bool isValid, required String helperText, String? errorText,
   });
 
   @override
   Widget build(BuildContext context) {
+    final text = controller.text;
+    final isTooShort = text.isNotEmpty && text.length < 6;
+    final isTooLong = text.length > 8; // aunque el inputFormatter ya lo limita
+    final isValid = !isTooShort && !isTooLong;
+
     return TextField(
       controller: controller,
       obscureText: obscure,
       style: const TextStyle(color: Colors.white),
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(8), // 👈 máximo 8 caracteres
+      ],
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
         fillColor: Colors.white10,
-        helperText: helperText,
+        helperText: "Debe tener entre 6 y 8 caracteres",
         helperStyle: const TextStyle(color: Colors.white54, fontSize: 12),
-        errorText: errorText,
+        errorText: isTooShort
+            ? "La contraseña debe tener al menos 6 caracteres"
+            : null,
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off : Icons.visibility,
@@ -44,7 +49,7 @@ class PasswordField extends StatelessWidget {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: controller.text.isEmpty
+            color: text.isEmpty
                 ? Colors.transparent
                 : isValid
                     ? Colors.green
@@ -55,7 +60,7 @@ class PasswordField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: controller.text.isEmpty
+            color: text.isEmpty
                 ? Colors.blue
                 : isValid
                     ? Colors.green

@@ -172,9 +172,8 @@ class FormularioReporte extends StatelessWidget {
         ),
         espacio24,
 
-        if (cargo?.toLowerCase() == "encargado de prevención de riesgos") ...[
-          const Text("Evaluación de potencial",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        // Solo admin puede ver frecuencia/severidad
+        if (rol == 'admin') ...[
           espacio12,
           FrecuenciaSeveridadFields(
             frecuencia: frecuencia,
@@ -183,7 +182,6 @@ class FormularioReporte extends StatelessWidget {
             onFrecuenciaChanged: onFrecuenciaChanged,
             onSeveridadChanged: onSeveridadChanged,
           ),
-          espacio24,
         ],
 
         const Text("Descripción",

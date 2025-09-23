@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'matriz_potencial.dart';
 
 class FrecuenciaSeveridadFields extends StatelessWidget {
-  final int? frecuencia;
-  final int? severidad;
+  final int? frecuencia, severidad;
   final String? nivelPotencial;
-  final ValueChanged<int?> onFrecuenciaChanged;
-  final ValueChanged<int?> onSeveridadChanged;
+  final ValueChanged<int?> onFrecuenciaChanged, onSeveridadChanged;
 
   const FrecuenciaSeveridadFields({
     super.key,

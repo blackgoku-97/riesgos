@@ -39,16 +39,21 @@ class ExportUtilsReporte {
     return DateTime.now();
   }
 
-  static List<List<String>> _buildRows(Map<String, dynamic> data) =>
-      _campos.entries.map((e) {
+  static List<List<String>> _buildRows(Map<String, dynamic> data) => _campos
+      .entries
+      .map((e) {
         final v = data[e.key];
         final txt = v is List ? v.join(', ') : v?.toString() ?? '';
         return [e.value, txt];
-      }).where((r) => r[1].isNotEmpty).toList();
+      })
+      .where((r) => r[1].isNotEmpty)
+      .toList();
 
   static String _titulo(Map<String, dynamic> d) {
     final f = _fecha(d['createdAt']);
-    final id = d['numeroReporte']?.toString() ?? '---';
+    var id = d['numeroReporte']?.toString() ?? '---';
+    // 👇 elimina "Reporte " si ya viene incluido, sin error de regex
+    id = id.replaceFirst(RegExp(r'^reporte\s*', caseSensitive: false), '');
     return 'Reporte $id - ${f.year}';
   }
 
@@ -68,7 +73,10 @@ class ExportUtilsReporte {
         '${dir.path}/${_safe(_titulo(data))}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
     final file = File(path)..writeAsBytesSync(excel.save()!);
     await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)], text: '${_titulo(data)} exportado a Excel'),
+      ShareParams(
+        files: [XFile(file.path)],
+        text: '${_titulo(data)} exportado a Excel',
+      ),
     );
   }
 
@@ -185,7 +193,10 @@ class ExportUtilsReporte {
         '${dir.path}/${_safe(_titulo(data))}_${DateTime.now().millisecondsSinceEpoch}.pdf';
     final file = File(path)..writeAsBytesSync(await pdf.save());
     await SharePlus.instance.share(
-      ShareParams(files: [XFile(file.path)], text: '${_titulo(data)} exportado a PDF'),
+      ShareParams(
+        files: [XFile(file.path)],
+        text: '${_titulo(data)} exportado a PDF',
+      ),
     );
   }
 }

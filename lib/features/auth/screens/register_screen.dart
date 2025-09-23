@@ -244,7 +244,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onToggleVisibility: () =>
                       setState(() => _obscureConfirm = !_obscureConfirm),
                   isValid: _confirmValid,
-                  errorText: _confirmError,
+                  errorText: _confirmError, helperText: '',
                 ),
                 const SizedBox(height: 12),
                 if (_error != null)
