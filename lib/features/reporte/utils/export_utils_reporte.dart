@@ -50,11 +50,10 @@ class ExportUtilsReporte {
       .toList();
 
   static String _titulo(Map<String, dynamic> d) {
-    final f = _fecha(d['createdAt']);
     var id = d['numeroReporte']?.toString() ?? '---';
-    // 👇 elimina "Reporte " si ya viene incluido, sin error de regex
+    // elimina "Reporte " si ya viene incluido
     id = id.replaceFirst(RegExp(r'^reporte\s*', caseSensitive: false), '');
-    return 'Reporte $id - ${f.year}';
+    return 'Reporte $id';
   }
 
   static String _safe(String s) =>
@@ -76,7 +75,7 @@ class ExportUtilsReporte {
       ShareParams(
         files: [XFile(file.path)],
         text: '${_titulo(data)} exportado a Excel',
-      ),
+      )
     );
   }
 
@@ -95,6 +94,7 @@ class ExportUtilsReporte {
 
     final rows = _buildRows(data);
     final fechaGeneracion = DateTime.now();
+    final fechaReporte = _fecha(data['createdAt']);
 
     pdf.addPage(
       pw.MultiPage(
@@ -126,7 +126,7 @@ class ExportUtilsReporte {
         build: (_) => [
           pw.Center(
             child: pw.Text(
-              _titulo(data),
+              '${_titulo(data)} - ${fechaReporte.year}', // 👈 aquí agregamos el año solo en el PDF
               style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
           ),
@@ -196,7 +196,7 @@ class ExportUtilsReporte {
       ShareParams(
         files: [XFile(file.path)],
         text: '${_titulo(data)} exportado a PDF',
-      ),
+      )
     );
   }
 }
