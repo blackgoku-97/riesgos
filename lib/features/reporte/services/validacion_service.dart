@@ -4,6 +4,8 @@ class ValidacionService {
   static String? validarReporte({
     required String? lugar,
     required String? tipoAccidente,
+    required String? rol,
+    required String? cargo,
     required List<String>? lesiones,
     required String? actividad,
     required String? clasificacion,
@@ -14,7 +16,6 @@ class ValidacionService {
     required String? descripcion,
     int? frecuencia,
     int? severidad,
-    int? potencial,
     File? imagen,
   }) {
     // Lugar
@@ -30,6 +31,11 @@ class ValidacionService {
     // Tipo de accidente
     if (tipoAccidente == null || tipoAccidente.isEmpty) {
       return "Debe seleccionar el tipo de accidente";
+    }
+
+    // Cargo
+    if (cargo == null || cargo.isEmpty) {
+      return "No se pudo obtener el cargo del usuario";
     }
 
     // Lesiones (obligatorias salvo cuasi accidente)
@@ -73,11 +79,9 @@ class ValidacionService {
       return "Debe ingresar una descripción";
     }
 
-    // Potencial (si se ingresan frecuencia y severidad)
-    if (frecuencia != null && severidad != null) {
-      if (potencial == null) {
-        return "No se pudo calcular el potencial";
-      }
+    if ((rol ?? '') == 'admin') {
+      if (frecuencia == null) return 'Debes seleccionar la frecuencia';
+      if (severidad == null) return 'Debes seleccionar la severidad';
     }
 
     return null; // ✅ Todo válido

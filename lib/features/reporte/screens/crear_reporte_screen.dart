@@ -22,13 +22,12 @@ class CrearReporteScreen extends StatefulWidget {
 class _CrearReporteScreenState extends State<CrearReporteScreen> {
   String? _rol, _cargo;
   String? _lugar, _tipoAccidente, _actividad, _quienAfectado, _descripcion;
-  String? _clasificacion;
+  String? _clasificacion, _potencialAuto;
   List<String> _lesiones = [];
   List<String> _accionesInseguras = [];
   List<String> _condicionesInseguras = [];
   List<String> _medidas = [];
-  int? _frecuencia, _severidad, _potencial;
-  String? _nivelPotencial;
+  int? _frecuencia, _severidad;
   File? _imagen;
   LatLng? _ubicacion;
   bool _guardando = false;
@@ -56,8 +55,8 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
 
   void _calcularPotencial() {
     if (_frecuencia != null && _severidad != null) {
-      _potencial = _frecuencia! * _severidad!;
-      _nivelPotencial = _potencial! >= 6 ? 'Bajo' : 'Alto';
+      final producto = _frecuencia! * _severidad!;
+      _potencialAuto = producto > 6 ? 'Aceptable' : 'No Aceptable';
       setState(() {});
     }
   }
@@ -72,7 +71,10 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
     final rol = _rol;
     final ubicacion = _ubicacion;
     if (rol == null || cargo == null || ubicacion == null) {
-      return SnackService.mostrar(context, 'No se pudo obtener perfil o ubicación');
+      return SnackService.mostrar(
+        context,
+        'No se pudo obtener perfil o ubicación',
+      );
     }
 
     final error = ValidacionService.validarReporte(
@@ -88,7 +90,8 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
       descripcion: _descripcion,
       frecuencia: _frecuencia,
       severidad: _severidad,
-      potencial: _potencial,
+      rol: rol,
+      cargo: cargo,
       imagen: _imagen,
     );
     if (error != null) return SnackService.mostrar(context, error);
@@ -117,13 +120,17 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
         descripcion: _descripcion!,
         frecuencia: _frecuencia,
         severidad: _severidad,
-        potencial: _potencial,
+        nivelPotencial: _potencialAuto,
         ubicacion: ubicacion,
         urlImagen: urlImagen,
       );
 
       if (!mounted) return;
-      SnackService.mostrar(context, 'Reporte guardado con éxito', success: true);
+      SnackService.mostrar(
+        context,
+        'Reporte guardado con éxito',
+        success: true,
+      );
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -164,8 +171,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           descripcion: _descripcion,
           frecuencia: _frecuencia,
           severidad: _severidad,
-          potencial: _potencial,
-          nivelPotencial: _nivelPotencial,
+          potencialAuto: _potencialAuto,
           imagen: _imagen,
           ubicacion: _ubicacion,
           guardando: _guardando,
@@ -176,8 +182,10 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
           onLesionesChanged: (v) => setState(() => _lesiones = v),
           onActividadChanged: (v) => setState(() => _actividad = v),
           onClasificacionChanged: (v) => setState(() => _clasificacion = v),
-          onAccionesInsegurasChanged: (v) => setState(() => _accionesInseguras = v),
-          onCondicionesInsegurasChanged: (v) => setState(() => _condicionesInseguras = v),
+          onAccionesInsegurasChanged: (v) =>
+              setState(() => _accionesInseguras = v),
+          onCondicionesInsegurasChanged: (v) =>
+              setState(() => _condicionesInseguras = v),
           onMedidasChanged: (v) => setState(() => _medidas = v),
           onQuienChanged: (v) => setState(() => _quienAfectado = v),
           onDescripcionChanged: (v) => setState(() => _descripcion = v),

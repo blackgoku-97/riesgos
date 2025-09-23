@@ -27,13 +27,12 @@ class DuplicarReporteScreen extends StatefulWidget {
 class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
   String? _rol, _cargo;
   String? _lugar, _tipoAccidente, _actividad, _quienAfectado, _descripcion;
-  String? _clasificacion;
+  String? _clasificacion, _potencialAuto;
   List<String> _lesiones = [];
   List<String> _accionesInseguras = [];
   List<String> _condicionesInseguras = [];
   List<String> _medidas = [];
-  int? _frecuencia, _severidad, _potencial;
-  String? _nivelPotencial;
+  int? _frecuencia, _severidad;
   File? _imagen;
   LatLng? _ubicacion;
   bool _guardando = false;
@@ -46,17 +45,18 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
     _lugar = r['lugar'];
     _tipoAccidente = r['tipoAccidente'];
     _actividad = r['actividad'];
+    _quienAfectado = r['quienAfectado'];
+    _descripcion = r['descripcion'];
     _clasificacion = r['clasificacion'];
+    _potencialAuto = r['nivelPotencial'];
+
     _lesiones = List<String>.from(r['lesiones'] ?? []);
     _accionesInseguras = List<String>.from(r['accionesInseguras'] ?? []);
     _condicionesInseguras = List<String>.from(r['condicionesInseguras'] ?? []);
     _medidas = List<String>.from(r['medidas'] ?? []);
-    _quienAfectado = r['quienAfectado'];
-    _descripcion = r['descripcion'];
+
     _frecuencia = r['frecuencia'];
     _severidad = r['severidad'];
-    _potencial = r['potencial'];
-    _nivelPotencial = r['nivelPotencial'];
 
     if (r['ubicacion'] != null) {
       final u = r['ubicacion'];
@@ -64,8 +64,6 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
     }
 
     _cargarPerfil();
-    // 👇 Eliminado: no forzamos ubicación actual, se mantiene la original
-    // if (_ubicacion == null) _obtenerUbicacion();
   }
 
   Future<void> _cargarPerfil() async {
@@ -84,14 +82,8 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
 
   void _calcularPotencial() {
     if (_frecuencia != null && _severidad != null) {
-      _potencial = _frecuencia! * _severidad!;
-      if (_potencial! <= 4) {
-        _nivelPotencial = 'Bajo';
-      } else if (_potencial! <= 9) {
-        _nivelPotencial = 'Medio';
-      } else {
-        _nivelPotencial = 'Alto';
-      }
+      final producto = _frecuencia! * _severidad!;
+      _potencialAuto = producto > 6 ? 'Aceptable' : 'No Aceptable';
       setState(() {});
     }
   }
@@ -105,10 +97,11 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
     final cargo = _cargo;
     final rol = _rol;
     final ubicacion = _ubicacion;
-
     if (rol == null || cargo == null || ubicacion == null) {
       return SnackService.mostrar(
-          context, 'No se pudo obtener perfil o ubicación');
+        context,
+        'No se pudo obtener perfil o ubicación',
+      );
     }
 
     final error = ValidacionService.validarReporte(
@@ -124,14 +117,13 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
       descripcion: _descripcion,
       frecuencia: _frecuencia,
       severidad: _severidad,
-      potencial: _potencial,
+      rol: rol,
+      cargo: cargo,
       imagen: _imagen,
     );
-
     if (error != null) return SnackService.mostrar(context, error);
 
     setState(() => _guardando = true);
-
     try {
       String? urlImagen = widget.reporte['urlImagen'];
 
@@ -157,15 +149,17 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
         descripcion: _descripcion!,
         frecuencia: _frecuencia,
         severidad: _severidad,
-        potencial: _potencial,
-        nivelPotencial: _nivelPotencial,
+        nivelPotencial: _potencialAuto,
         ubicacion: ubicacion,
         urlImagen: urlImagen,
       );
 
       if (!mounted) return;
-      SnackService.mostrar(context, 'Reporte duplicado con éxito',
-          success: true);
+      SnackService.mostrar(
+        context,
+        'Reporte duplicado con éxito',
+        success: true,
+      );
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -206,8 +200,7 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
           descripcion: _descripcion,
           frecuencia: _frecuencia,
           severidad: _severidad,
-          potencial: _potencial,
-          nivelPotencial: _nivelPotencial,
+          potencialAuto: _potencialAuto,
           imagen: _imagen,
           ubicacion: _ubicacion,
           guardando: _guardando,
@@ -215,14 +208,14 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
           onGuardar: _guardar,
           onLugarChanged: (v) => setState(() => _lugar = v),
           onTipoAccidenteChanged: (v) => setState(() => _tipoAccidente = v),
-          onLesionesChanged: (v) => setState(() => _lesiones = v),
+          onLesionesChanged: (v) => setState(() => _lesiones = List.from(v)),
           onActividadChanged: (v) => setState(() => _actividad = v),
           onClasificacionChanged: (v) => setState(() => _clasificacion = v),
           onAccionesInsegurasChanged: (v) =>
-              setState(() => _accionesInseguras = v),
+              setState(() => _accionesInseguras = List.from(v)),
           onCondicionesInsegurasChanged: (v) =>
-              setState(() => _condicionesInseguras = v),
-          onMedidasChanged: (v) => setState(() => _medidas = v),
+              setState(() => _condicionesInseguras = List.from(v)),
+          onMedidasChanged: (v) => setState(() => _medidas = List.from(v)),
           onQuienChanged: (v) => setState(() => _quienAfectado = v),
           onDescripcionChanged: (v) => setState(() => _descripcion = v),
           onFrecuenciaChanged: (v) {

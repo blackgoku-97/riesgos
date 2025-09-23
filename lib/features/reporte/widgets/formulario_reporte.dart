@@ -26,8 +26,7 @@ class FormularioReporte extends StatelessWidget {
   final String? descripcion;
   final int? frecuencia;
   final int? severidad;
-  final int? potencial;
-  final String? nivelPotencial;
+  final String? potencialAuto;
   final File? imagen;
   final LatLng? ubicacion;
   final bool guardando;
@@ -64,8 +63,7 @@ class FormularioReporte extends StatelessWidget {
     required this.descripcion,
     required this.frecuencia,
     required this.severidad,
-    required this.potencial,
-    required this.nivelPotencial,
+    required this.potencialAuto,
     required this.imagen,
     required this.ubicacion,
     required this.guardando,
@@ -195,7 +193,7 @@ class FormularioReporte extends StatelessWidget {
           FrecuenciaSeveridadFields(
             frecuencia: frecuencia,
             severidad: severidad,
-            nivelPotencial: nivelPotencial,
+            nivelPotencial: potencialAuto,
             onFrecuenciaChanged: onFrecuenciaChanged,
             onSeveridadChanged: onSeveridadChanged,
           ),
