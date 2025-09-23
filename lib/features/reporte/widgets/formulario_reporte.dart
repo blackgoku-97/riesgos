@@ -12,40 +12,21 @@ import 'mapa_ubicacion.dart';
 import 'guardar_button.dart';
 
 class FormularioReporte extends StatelessWidget {
-  final String? cargo;
-  final String? rol;
-  final String? lugar;
-  final String? tipoAccidente;
-  final List<String> lesionesSeleccionadas;
-  final String? actividad;
-  final String? clasificacion;
-  final List<String> accionesInsegurasSeleccionadas;
-  final List<String> condicionesInsegurasSeleccionadas;
-  final List<String> medidasSeleccionadas;
-  final String? quienAfectado;
-  final String? descripcion;
-  final int? frecuencia;
-  final int? severidad;
-  final String? potencialAuto;
+  final String? cargo, rol, lugar, tipoAccidente;
+  final List<String> lesionesSeleccionadas, accionesInsegurasSeleccionadas, condicionesInsegurasSeleccionadas, medidasSeleccionadas;
+  final String? actividad, clasificacion, quienAfectado, descripcion, potencialAuto;
+  final int? frecuencia, severidad;
   final File? imagen;
   final LatLng? ubicacion;
   final bool guardando;
 
-  final VoidCallback onTomarFoto;
-  final VoidCallback onGuardar;
+  final VoidCallback onTomarFoto, onGuardar;
 
-  final ValueChanged<String?> onLugarChanged;
-  final ValueChanged<String?> onTipoAccidenteChanged;
-  final ValueChanged<List<String>> onLesionesChanged;
-  final ValueChanged<String?> onActividadChanged;
-  final ValueChanged<String?> onClasificacionChanged;
-  final ValueChanged<List<String>> onAccionesInsegurasChanged;
-  final ValueChanged<List<String>> onCondicionesInsegurasChanged;
-  final ValueChanged<List<String>> onMedidasChanged;
-  final ValueChanged<String?> onQuienChanged;
-  final ValueChanged<String?> onDescripcionChanged;
-  final ValueChanged<int?> onFrecuenciaChanged;
-  final ValueChanged<int?> onSeveridadChanged;
+  final ValueChanged<String?> onLugarChanged, onTipoAccidenteChanged;
+  final ValueChanged<List<String>> onLesionesChanged, onAccionesInsegurasChanged, onCondicionesInsegurasChanged, onMedidasChanged;
+  final ValueChanged<String?> onActividadChanged, onClasificacionChanged;
+  final ValueChanged<String?> onQuienChanged, onDescripcionChanged;
+  final ValueChanged<int?> onFrecuenciaChanged, onSeveridadChanged;
 
   const FormularioReporte({
     super.key,
@@ -85,27 +66,32 @@ class FormularioReporte extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final espacio12 = const SizedBox(height: 12);
+    final espacio20 = const SizedBox(height: 20);
+    final espacio24 = const SizedBox(height: 24);
+    final espacio32 = const SizedBox(height: 32);
+
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         Center(child: Image.asset("assets/images/logo.png", height: 60)),
-        const SizedBox(height: 24),
+        espacio24,
 
         const Text("Datos del trabajador",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 12),
+        espacio12,
         Text("Cargo: ${cargo ?? '—'}"),
-        const SizedBox(height: 24),
+        espacio24,
 
         const Text("Ubicación",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 12),
+        espacio12,
         MapaUbicacion(ubicacion: ubicacion),
-        const SizedBox(height: 24),
+        espacio24,
 
         const Text("Detalles del incidente",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 12),
+        espacio12,
         TextFormField(
           decoration: const InputDecoration(
             labelText: "Lugar del incidente",
@@ -115,7 +101,7 @@ class FormularioReporte extends StatelessWidget {
           onChanged: onLugarChanged,
           validator: (v) => v == null || v.isEmpty ? "Ingrese lugar" : null,
         ),
-        const SizedBox(height: 20),
+        espacio20,
 
         SelectorDropdown<String>(
           label: "¿A quién le ocurrió?",
@@ -124,7 +110,7 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onQuienChanged,
         ),
-        const SizedBox(height: 20),
+        espacio20,
 
         SelectorDropdown<String>(
           label: "Tipo de accidente",
@@ -133,7 +119,7 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onTipoAccidenteChanged,
         ),
-        const SizedBox(height: 20),
+        espacio20,
 
         if (tipoAccidente != "Cuasi Accidente")
           SelectorLesiones(
@@ -141,7 +127,7 @@ class FormularioReporte extends StatelessWidget {
             seleccionadas: lesionesSeleccionadas,
             onChanged: onLesionesChanged,
           ),
-        if (tipoAccidente != "Cuasi Accidente") const SizedBox(height: 20),
+        if (tipoAccidente != "Cuasi Accidente") espacio20,
 
         SelectorDropdown<String>(
           label: "Actividad que realizaba",
@@ -150,7 +136,7 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onActividadChanged,
         ),
-        const SizedBox(height: 20),
+        espacio20,
 
         SelectorDropdown<String>(
           label: "Clasificación",
@@ -159,7 +145,7 @@ class FormularioReporte extends StatelessWidget {
           getLabel: (o) => o,
           onChanged: onClasificacionChanged,
         ),
-        const SizedBox(height: 20),
+        espacio20,
 
         if (clasificacion == "Acción Insegura")
           SelectorClasificaciones(
@@ -177,19 +163,19 @@ class FormularioReporte extends StatelessWidget {
             onChanged: onCondicionesInsegurasChanged,
           ),
 
-        const SizedBox(height: 24),
+        espacio24,
 
         SelectorMedidas(
           opciones: opcionesMedidas,
           seleccionadas: medidasSeleccionadas,
           onChanged: onMedidasChanged,
         ),
-        const SizedBox(height: 24),
+        espacio24,
 
         if (cargo?.toLowerCase() == "encargado de prevención de riesgos") ...[
           const Text("Evaluación de potencial",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const SizedBox(height: 12),
+          espacio12,
           FrecuenciaSeveridadFields(
             frecuencia: frecuencia,
             severidad: severidad,
@@ -197,12 +183,12 @@ class FormularioReporte extends StatelessWidget {
             onFrecuenciaChanged: onFrecuenciaChanged,
             onSeveridadChanged: onSeveridadChanged,
           ),
-          const SizedBox(height: 24),
+          espacio24,
         ],
 
         const Text("Descripción",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 12),
+        espacio12,
         TextFormField(
           decoration: const InputDecoration(
             labelText: "Descripción",
@@ -214,11 +200,11 @@ class FormularioReporte extends StatelessWidget {
           validator: (v) =>
               v == null || v.isEmpty ? "Ingrese una descripción" : null,
         ),
-        const SizedBox(height: 24),
+        espacio24,
 
         const Text("Evidencia fotográfica",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        const SizedBox(height: 12),
+        espacio12,
         if (imagen != null)
           Image.file(imagen!, height: 200, fit: BoxFit.cover),
         ElevatedButton.icon(
@@ -226,7 +212,7 @@ class FormularioReporte extends StatelessWidget {
           icon: const Icon(Icons.camera_alt),
           label: const Text("Capturar Imagen"),
         ),
-        const SizedBox(height: 32),
+        espacio32,
 
         GuardarButton(
           loading: guardando,

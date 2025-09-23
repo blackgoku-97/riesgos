@@ -10,31 +10,18 @@ import 'mapa_ubicacion.dart';
 import 'guardar_button.dart';
 
 class FormularioPlanificacion extends StatelessWidget {
-  final String? cargo;
-  final String? rol;
+  final String? cargo, rol, riesgoAuto;
   final TextEditingController planTrabajoCtrl;
-  final String? areaSel;
-  final String? procesoSel;
-  final String? actividadSel;
-  final List<String> peligrosSel;
-  final List<String> agenteSel;
-  final List<String> medidasSel;
-  final int? frecuencia;
-  final int? severidad;
-  final String? riesgoAuto;
+  final String? areaSel, procesoSel, actividadSel;
+  final List<String> peligrosSel, agenteSel, medidasSel;
+  final int? frecuencia, severidad;
   final File? imagen;
   final LatLng? ubicacion;
   final bool guardando;
-  final VoidCallback onTomarFoto;
-  final VoidCallback onGuardar;
-  final ValueChanged<String?> onAreaChanged;
-  final ValueChanged<String?> onProcesoChanged;
-  final ValueChanged<String?> onActividadChanged;
-  final ValueChanged<List<String>> onPeligrosChanged;
-  final ValueChanged<List<String>> onAgenteChanged;
-  final ValueChanged<List<String>> onMedidasChanged;
-  final ValueChanged<int?> onFrecuenciaChanged;
-  final ValueChanged<int?> onSeveridadChanged;
+  final VoidCallback onTomarFoto, onGuardar;
+  final ValueChanged<String?> onAreaChanged, onProcesoChanged, onActividadChanged;
+  final ValueChanged<List<String>> onPeligrosChanged, onAgenteChanged, onMedidasChanged;
+  final ValueChanged<int?> onFrecuenciaChanged, onSeveridadChanged;
 
   const FormularioPlanificacion({
     super.key,
@@ -67,8 +54,9 @@ class FormularioPlanificacion extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final espacio = const SizedBox(height: 12);
     final espacio8 = const SizedBox(height: 8);
+    final espacio12 = const SizedBox(height: 12);
+    final espacio16 = const SizedBox(height: 16);
 
     final areaEnum = opcionesArea.firstWhere(
       (a) => a.label == areaSel,
@@ -79,9 +67,9 @@ class FormularioPlanificacion extends StatelessWidget {
       children: [
         const Text("Datos del trabajador",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-        espacio,
+        espacio12,
         Text("Cargo: ${cargo ?? '—'}"),
-        espacio,
+        espacio12,
 
         TextFormField(
           controller: planTrabajoCtrl,
@@ -90,7 +78,7 @@ class FormularioPlanificacion extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
         ),
-        espacio,
+        espacio12,
 
         // Área
         SelectorDropdown<String>(
@@ -106,7 +94,7 @@ class FormularioPlanificacion extends StatelessWidget {
 
         // Proceso
         if (opcionesProceso[areaEnum]!.isNotEmpty) ...[
-          espacio,
+          espacio12,
           SelectorDropdown<String>(
             label: 'Proceso',
             value: (procesoSel != null &&
@@ -121,7 +109,7 @@ class FormularioPlanificacion extends StatelessWidget {
 
         // Actividad
         if (opcionesActividad[areaEnum]!.isNotEmpty) ...[
-          espacio,
+          espacio12,
           SelectorDropdown<String>(
             label: 'Actividad',
             value: (actividadSel != null &&
@@ -136,7 +124,7 @@ class FormularioPlanificacion extends StatelessWidget {
 
         // Peligros
         if (opcionesPeligro[areaEnum]!.isNotEmpty) ...[
-          espacio,
+          espacio12,
           SelectorPeligros(
             label: 'Peligros',
             opciones: opcionesPeligro[areaEnum]!,
@@ -147,7 +135,7 @@ class FormularioPlanificacion extends StatelessWidget {
 
         // Agente material
         if (opcionesAgenteMaterial[areaEnum]!.isNotEmpty) ...[
-          espacio,
+          espacio12,
           SelectorPeligros(
             label: 'Agente material',
             opciones: opcionesAgenteMaterial[areaEnum]!,
@@ -156,7 +144,7 @@ class FormularioPlanificacion extends StatelessWidget {
           ),
         ],
 
-        espacio,
+        espacio12,
         SelectorPeligros(
           label: 'Medidas',
           opciones: opcionesMedidas,
@@ -166,7 +154,7 @@ class FormularioPlanificacion extends StatelessWidget {
 
         // Solo admin puede ver frecuencia/severidad
         if (rol == 'admin') ...[
-          espacio,
+          espacio12,
           FrecuenciaSeveridadFields(
             frecuencia: frecuencia,
             severidad: severidad,
@@ -178,7 +166,7 @@ class FormularioPlanificacion extends StatelessWidget {
 
         espacio8,
         MapaUbicacion(ubicacion: ubicacion),
-        espacio,
+        espacio12,
 
         if (imagen != null) Image.file(imagen!, height: 160, fit: BoxFit.cover),
         OutlinedButton.icon(
@@ -187,7 +175,7 @@ class FormularioPlanificacion extends StatelessWidget {
           label: const Text('Tomar foto'),
         ),
 
-        const SizedBox(height: 16),
+        espacio16,
         GuardarButton(
           loading: guardando,
           text: 'Guardar',

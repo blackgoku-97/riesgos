@@ -83,7 +83,7 @@ class _DuplicarReporteScreenState extends State<DuplicarReporteScreen> {
   void _calcularPotencial() {
     if (_frecuencia != null && _severidad != null) {
       final producto = _frecuencia! * _severidad!;
-      _potencialAuto = producto > 6 ? 'Aceptable' : 'No Aceptable';
+      _potencialAuto = producto > 6 ? 'Alto' : 'Bajo';
       setState(() {});
     }
   }
