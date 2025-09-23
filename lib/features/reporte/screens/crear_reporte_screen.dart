@@ -56,7 +56,7 @@ class _CrearReporteScreenState extends State<CrearReporteScreen> {
   void _calcularPotencial() {
     if (_frecuencia != null && _severidad != null) {
       final producto = _frecuencia! * _severidad!;
-      _potencialAuto = producto > 6 ? 'Aceptable' : 'No Aceptable';
+      _potencialAuto = producto > 6 ? 'Alta' : 'Bajo';
       setState(() {});
     }
   }
