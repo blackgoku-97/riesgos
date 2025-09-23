@@ -50,8 +50,7 @@ class _HistorialReportesScreenState extends State<HistorialReportesScreen> {
                     context,
                     '/duplicar_reporte',
                     arguments: {
-                      'data': docs[i].data(),
-                      'origenId': docs[i].id,
+                      'reporte': docs[i].data() as Map<String, dynamic>,
                     },
                   );
                 },

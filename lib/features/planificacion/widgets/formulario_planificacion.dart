@@ -77,7 +77,6 @@ class FormularioPlanificacion extends StatelessWidget {
 
     return ListView(
       children: [
-        // 👇 Aquí cambiamos el TextFormField por un Text simple
         const Text("Datos del trabajador",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         espacio,
@@ -93,33 +92,49 @@ class FormularioPlanificacion extends StatelessWidget {
         ),
         espacio,
 
+        // Área
         SelectorDropdown<String>(
           label: 'Área',
-          value: areaSel,
+          value: (areaSel != null &&
+                  opcionesArea.map((a) => a.label).contains(areaSel))
+              ? areaSel
+              : null,
           opciones: opcionesArea.map((a) => a.label).toList(),
           getLabel: (v) => v,
           onChanged: onAreaChanged,
         ),
+
+        // Proceso
         if (opcionesProceso[areaEnum]!.isNotEmpty) ...[
           espacio,
           SelectorDropdown<String>(
             label: 'Proceso',
-            value: procesoSel,
+            value: (procesoSel != null &&
+                    opcionesProceso[areaEnum]!.contains(procesoSel))
+                ? procesoSel
+                : null,
             opciones: opcionesProceso[areaEnum]!,
             getLabel: (v) => v,
             onChanged: onProcesoChanged,
           ),
         ],
+
+        // Actividad
         if (opcionesActividad[areaEnum]!.isNotEmpty) ...[
           espacio,
           SelectorDropdown<String>(
             label: 'Actividad',
-            value: actividadSel,
+            value: (actividadSel != null &&
+                    opcionesActividad[areaEnum]!.contains(actividadSel))
+                ? actividadSel
+                : null,
             opciones: opcionesActividad[areaEnum]!,
             getLabel: (v) => v,
             onChanged: onActividadChanged,
           ),
         ],
+
+        // Peligros
         if (opcionesPeligro[areaEnum]!.isNotEmpty) ...[
           espacio,
           SelectorPeligros(
@@ -129,6 +144,8 @@ class FormularioPlanificacion extends StatelessWidget {
             onChanged: onPeligrosChanged,
           ),
         ],
+
+        // Agente material
         if (opcionesAgenteMaterial[areaEnum]!.isNotEmpty) ...[
           espacio,
           SelectorPeligros(
@@ -138,6 +155,7 @@ class FormularioPlanificacion extends StatelessWidget {
             onChanged: onAgenteChanged,
           ),
         ],
+
         espacio,
         SelectorPeligros(
           label: 'Medidas',
@@ -145,6 +163,8 @@ class FormularioPlanificacion extends StatelessWidget {
           seleccionados: medidasSel,
           onChanged: onMedidasChanged,
         ),
+
+        // Solo admin puede ver frecuencia/severidad
         if (rol == 'admin') ...[
           espacio,
           FrecuenciaSeveridadFields(
@@ -155,15 +175,18 @@ class FormularioPlanificacion extends StatelessWidget {
             onSeveridadChanged: onSeveridadChanged,
           ),
         ],
+
         espacio8,
         MapaUbicacion(ubicacion: ubicacion),
         espacio,
+
         if (imagen != null) Image.file(imagen!, height: 160, fit: BoxFit.cover),
         OutlinedButton.icon(
           onPressed: onTomarFoto,
           icon: const Icon(Icons.camera_alt),
           label: const Text('Tomar foto'),
         ),
+
         const SizedBox(height: 16),
         GuardarButton(
           loading: guardando,

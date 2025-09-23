@@ -29,7 +29,9 @@ class _DuplicarPlanificacionScreenState
     extends State<DuplicarPlanificacionScreen> {
   late TextEditingController _planTrabajoCtrl;
   String? _areaSel, _procesoSel, _actividadSel, _rol, _cargo, _riesgoAuto;
-  late List<String> _peligrosSel, _agenteSel, _medidasSel;
+  List<String> _peligrosSel = [];
+  List<String> _agenteSel = [];
+  List<String> _medidasSel = [];
   int? _frecuencia, _severidad;
   File? _imagen;
   LatLng? _ubicacion;
@@ -57,8 +59,6 @@ class _DuplicarPlanificacionScreenState
     }
 
     _cargarPerfil();
-    // 👇 Eliminado: no forzamos ubicación actual, se mantiene la original
-    // if (_ubicacion == null) _obtenerUbicacion();
   }
 
   Future<void> _cargarPerfil() async {
@@ -88,14 +88,6 @@ class _DuplicarPlanificacionScreenState
     if (mounted && img != null) setState(() => _imagen = img);
   }
 
-  void _updateList(List<String> target, List<String> source) {
-    setState(() {
-      target
-        ..clear()
-        ..addAll(source);
-    });
-  }
-
   Future<void> _guardar() async {
     final cargo = _cargo;
     final rol = _rol;
@@ -103,7 +95,9 @@ class _DuplicarPlanificacionScreenState
 
     if (rol == null || ubicacion == null || cargo == null) {
       return SnackService.mostrar(
-          context, 'No se pudo obtener el rol, cargo o la ubicación');
+        context,
+        'No se pudo obtener el rol, cargo o la ubicación',
+      );
     }
 
     final error = ValidacionService.validar(
@@ -154,8 +148,11 @@ class _DuplicarPlanificacionScreenState
       );
 
       if (!mounted) return;
-      SnackService.mostrar(context, 'Planificación duplicada con éxito',
-          success: true);
+      SnackService.mostrar(
+        context,
+        'Planificación duplicada con éxito',
+        success: true,
+      );
       Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -199,14 +196,23 @@ class _DuplicarPlanificacionScreenState
           onTomarFoto: _tomarFoto,
           onGuardar: _guardar,
           onAreaChanged: (v) {
-            // 👇 Ya no reseteamos todo, mantenemos datos originales
-            setState(() => _areaSel = v);
+            setState(() {
+              _areaSel = v;
+              _procesoSel = null;
+              _actividadSel = null;
+              _peligrosSel = [];
+              _agenteSel = [];
+              _medidasSel = [];
+            });
           },
           onProcesoChanged: (v) => setState(() => _procesoSel = v),
           onActividadChanged: (v) => setState(() => _actividadSel = v),
-          onPeligrosChanged: (sel) => _updateList(_peligrosSel, sel),
-          onAgenteChanged: (sel) => _updateList(_agenteSel, sel),
-          onMedidasChanged: (sel) => _updateList(_medidasSel, sel),
+          onPeligrosChanged: (sel) =>
+              setState(() => _peligrosSel = List.from(sel)),
+          onAgenteChanged: (sel) =>
+              setState(() => _agenteSel = List.from(sel)),
+          onMedidasChanged: (sel) =>
+              setState(() => _medidasSel = List.from(sel)),
           onFrecuenciaChanged: (v) {
             _frecuencia = v;
             _calcularRiesgo();

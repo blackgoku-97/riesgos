@@ -50,8 +50,7 @@ class _HistorialPlanificacionesScreenState extends State<HistorialPlanificacione
                     context,
                     '/duplicar_planificacion',
                     arguments: {
-                      'data': docs[i].data(),
-                      'origenId': docs[i].id,
+                      'planificacion': docs[i].data() as Map<String, dynamic>,
                     },
                   );
                 },
