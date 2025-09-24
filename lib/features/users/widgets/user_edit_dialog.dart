@@ -20,8 +20,9 @@ class _UserEditDialogState extends State<UserEditDialog> {
     super.initState();
     _nombreCtrl = TextEditingController(text: widget.usuario['nombre']);
     _cargoCtrl = TextEditingController(text: widget.usuario['cargo']);
+    // Si ya tienes rutFormateado en Firestore, lo cargas directo
     _rutCtrl = TextEditingController(
-      text: formatRut(widget.usuario['rut'] ?? ''),
+      text: widget.usuario['rutFormateado'] ?? formatRut(widget.usuario['rut'] ?? ''),
     );
   }
 
@@ -83,7 +84,7 @@ class _UserEditDialogState extends State<UserEditDialog> {
               Navigator.pop(context, {
                 'nombre': _nombreCtrl.text.trim(),
                 'cargo': _cargoCtrl.text.trim(),
-                'rut': rutLimpio,          // 👈 para búsquedas
+                'rut': rutLimpio,             // 👈 para búsquedas
                 'rutFormateado': rutFormateado, // 👈 para mostrar
               });
             }
