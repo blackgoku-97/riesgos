@@ -77,14 +77,14 @@ class _UserEditDialogState extends State<UserEditDialog> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
+              final rutFormateado = _rutCtrl.text.trim().toUpperCase();
+              final rutLimpio = rutFormateado.replaceAll('.', '').replaceAll('-', '');
+
               Navigator.pop(context, {
                 'nombre': _nombreCtrl.text.trim(),
                 'cargo': _cargoCtrl.text.trim(),
-                // Guardar limpio en Firestore (sin puntos ni guion)
-                'rut': _rutCtrl.text
-                    .replaceAll('.', '')
-                    .replaceAll('-', '')
-                    .toUpperCase(),
+                'rut': rutLimpio,          // 👈 para búsquedas
+                'rutFormateado': rutFormateado, // 👈 para mostrar
               });
             }
           },
