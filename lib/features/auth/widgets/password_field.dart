@@ -18,26 +18,24 @@ class PasswordField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = controller.text;
-    final isTooShort = text.isNotEmpty && text.length < 6;
-    final isTooLong = text.length > 8; // aunque el inputFormatter ya lo limita
-    final isValid = !isTooShort && !isTooLong;
+    final isValid = text.length == 8; // 👈 exactamente 8 caracteres
 
     return TextField(
       controller: controller,
       obscureText: obscure,
       style: const TextStyle(color: Colors.white),
       inputFormatters: [
-        LengthLimitingTextInputFormatter(8), // 👈 máximo 8 caracteres
+        LengthLimitingTextInputFormatter(8), // 👈 máximo 8
       ],
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Colors.white70),
         filled: true,
         fillColor: Colors.white10,
-        helperText: "Debe tener entre 6 y 8 caracteres",
+        helperText: "Debe tener exactamente 8 caracteres",
         helperStyle: const TextStyle(color: Colors.white54, fontSize: 12),
-        errorText: isTooShort
-            ? "La contraseña debe tener al menos 6 caracteres"
+        errorText: text.isNotEmpty && !isValid
+            ? "La contraseña debe tener exactamente 8 caracteres"
             : null,
         suffixIcon: IconButton(
           icon: Icon(

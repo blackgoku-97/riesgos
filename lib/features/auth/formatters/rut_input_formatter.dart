@@ -25,25 +25,26 @@ class RutInputFormatter extends TextInputFormatter {
     String dv = '';
     if (text.length > 1) {
       body = text.substring(0, text.length - 1);
-      dv = text.substring(text.length - 1);
+      dv = text.substring(text.length - 1).toUpperCase();
     }
 
     // Insertar puntos cada 3 dígitos desde la derecha
     final buffer = StringBuffer();
-    for (int i = 0; i < body.length; i++) {
-      int position = body.length - i;
+    int counter = 0;
+    for (int i = body.length - 1; i >= 0; i--) {
       buffer.write(body[i]);
-      if (position > 1 && position % 3 == 1) {
+      counter++;
+      if (counter == 3 && i != 0) {
         buffer.write('.');
+        counter = 0;
       }
     }
 
-    String formatted = buffer.toString();
+    // Invertir porque lo construimos al revés
+    String formattedBody = buffer.toString().split('').reversed.join();
 
     // Agregar guion si hay dígito verificador
-    if (dv.isNotEmpty) {
-      formatted += '-$dv';
-    }
+    String formatted = dv.isNotEmpty ? '$formattedBody-$dv' : formattedBody;
 
     return TextEditingValue(
       text: formatted,

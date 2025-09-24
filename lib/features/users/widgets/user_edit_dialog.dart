@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/rut_utils.dart';
 
 class UserEditDialog extends StatefulWidget {
   final Map<String, dynamic> usuario;
@@ -19,7 +20,9 @@ class _UserEditDialogState extends State<UserEditDialog> {
     super.initState();
     _nombreCtrl = TextEditingController(text: widget.usuario['nombre']);
     _cargoCtrl = TextEditingController(text: widget.usuario['cargo']);
-    _rutCtrl = TextEditingController(text: widget.usuario['rut']);
+    _rutCtrl = TextEditingController(
+      text: formatRut(widget.usuario['rut'] ?? ''),
+    );
   }
 
   @override
@@ -28,21 +31,6 @@ class _UserEditDialogState extends State<UserEditDialog> {
     _cargoCtrl.dispose();
     _rutCtrl.dispose();
     super.dispose();
-  }
-
-  bool _validarRut(String rut) {
-    rut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
-    if (rut.length < 2) return false;
-    final cuerpo = rut.substring(0, rut.length - 1);
-    final dv = rut.substring(rut.length - 1);
-    int suma = 0, multiplo = 2;
-    for (int i = cuerpo.length - 1; i >= 0; i--) {
-      suma += int.parse(cuerpo[i]) * multiplo;
-      multiplo = multiplo == 7 ? 2 : multiplo + 1;
-    }
-    final dvEsperado = 11 - (suma % 11);
-    final dvStr = dvEsperado == 11 ? '0' : dvEsperado == 10 ? 'K' : dvEsperado.toString();
-    return dvStr == dv;
   }
 
   @override
@@ -58,19 +46,22 @@ class _UserEditDialogState extends State<UserEditDialog> {
               TextFormField(
                 controller: _nombreCtrl,
                 decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Ingrese un nombre' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Ingrese un nombre' : null,
               ),
               TextFormField(
                 controller: _cargoCtrl,
                 decoration: const InputDecoration(labelText: 'Cargo'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Ingrese un cargo' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Ingrese un cargo' : null,
               ),
               TextFormField(
                 controller: _rutCtrl,
                 decoration: const InputDecoration(labelText: 'RUT'),
+                inputFormatters: [RutInputFormatter()],
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Ingrese un RUT';
-                  if (!_validarRut(v.trim())) return 'RUT inválido';
+                  if (!validarRut(v.trim())) return 'RUT inválido';
                   return null;
                 },
               ),
@@ -89,7 +80,11 @@ class _UserEditDialogState extends State<UserEditDialog> {
               Navigator.pop(context, {
                 'nombre': _nombreCtrl.text.trim(),
                 'cargo': _cargoCtrl.text.trim(),
-                'rut': _rutCtrl.text.trim(),
+                // Guardar limpio en Firestore (sin puntos ni guion)
+                'rut': _rutCtrl.text
+                    .replaceAll('.', '')
+                    .replaceAll('-', '')
+                    .toUpperCase(),
               });
             }
           },

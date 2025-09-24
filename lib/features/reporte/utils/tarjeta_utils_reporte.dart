@@ -38,7 +38,11 @@ class TarjetaUtilsReporte extends StatelessWidget {
       '👤 Cargo: ${data['cargo'] ?? ''}',
       '📍 Lugar: ${data['lugar'] ?? ''}',
       '💥 Tipo de Accidente: ${data['tipoAccidente'] ?? ''}',
-      '🤕 Lesiones: ${(data['lesiones'] as List?)?.join(", ") ?? "—"}',
+
+      // 👇 Solo mostrar lesiones si NO es cuasi accidente
+      if (data['tipoAccidente'] != 'Cuasi Accidente')
+        '🤕 Lesiones: ${(data['lesiones'] as List?)?.join(", ") ?? "—"}',
+
       '🔧 Actividad: ${data['actividad'] ?? ''}',
       '📊 Clasificación: ${data['clasificacion'] ?? ''}',
       '⚠️ Acciones Inseguras: ${(data['accionesInseguras'] as List?)?.join(", ") ?? "—"}',

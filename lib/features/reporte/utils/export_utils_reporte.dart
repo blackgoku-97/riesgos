@@ -53,7 +53,7 @@ class ExportUtilsReporte {
     var id = d['numeroReporte']?.toString() ?? '---';
     // elimina "Reporte " si ya viene incluido
     id = id.replaceFirst(RegExp(r'^reporte\s*', caseSensitive: false), '');
-    return 'Reporte $id';
+    return 'Reporte $id'; // 👈 sin año aquí
   }
 
   static String _safe(String s) =>
@@ -71,11 +71,12 @@ class ExportUtilsReporte {
     final path =
         '${dir.path}/${_safe(_titulo(data))}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
     final file = File(path)..writeAsBytesSync(excel.save()!);
+
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
         text: '${_titulo(data)} exportado a Excel',
-      )
+      ),
     );
   }
 
@@ -126,7 +127,7 @@ class ExportUtilsReporte {
         build: (_) => [
           pw.Center(
             child: pw.Text(
-              '${_titulo(data)} - ${fechaReporte.year}', // 👈 aquí agregamos el año solo en el PDF
+              '${_titulo(data)} - ${fechaReporte.year}', // 👈 año solo aquí
               style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
           ),
@@ -192,11 +193,12 @@ class ExportUtilsReporte {
     final path =
         '${dir.path}/${_safe(_titulo(data))}_${DateTime.now().millisecondsSinceEpoch}.pdf';
     final file = File(path)..writeAsBytesSync(await pdf.save());
+
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
         text: '${_titulo(data)} exportado a PDF',
-      )
+      ),
     );
   }
 }
