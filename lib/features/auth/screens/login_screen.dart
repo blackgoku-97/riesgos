@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
 import '../../auth/widgets/user_field.dart';
+import '../utils/rut_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -75,9 +76,10 @@ class _LoginScreenState extends State<LoginScreen> {
       String emailToUse = userInput;
 
       if (_authService.isValidRUT(userInput.toUpperCase())) {
+        final rutFormateado = formatRut(userInput.toUpperCase());
         final perfilesRef = _authService.db.collection('perfiles');
         final query = await perfilesRef
-            .where('rut', isEqualTo: userInput.toUpperCase())
+            .where('rutFormateado', isEqualTo: rutFormateado)
             .limit(1)
             .get();
 
