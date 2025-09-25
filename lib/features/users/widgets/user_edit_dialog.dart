@@ -20,7 +20,6 @@ class _UserEditDialogState extends State<UserEditDialog> {
     super.initState();
     _nombreCtrl = TextEditingController(text: widget.usuario['nombre']);
     _cargoCtrl = TextEditingController(text: widget.usuario['cargo']);
-    // Cargar siempre el formateado si existe, si no, formatear el limpio
     _rutCtrl = TextEditingController(
       text: widget.usuario['rutFormateado'] ?? formatRut(widget.usuario['rut'] ?? ''),
     );
@@ -84,8 +83,8 @@ class _UserEditDialogState extends State<UserEditDialog> {
               Navigator.pop(context, {
                 'nombre': _nombreCtrl.text.trim(),
                 'cargo': _cargoCtrl.text.trim(),
-                'rut': rutLimpio,              // 👈 limpio, para búsquedas
-                'rutFormateado': rutFormateado, // 👈 con puntos y guion, para mostrar
+                'rut': rutLimpio,               // limpio, para búsquedas
+                'rutFormateado': rutFormateado, // con puntos y guion, para mostrar
               });
             }
           },

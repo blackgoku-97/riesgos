@@ -15,30 +15,27 @@ class UserListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      title: Text(
-        usuario['nombre'] ?? '',
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-      ),
+      title: Text(usuario['nombre'] ?? ''),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Cargo: ${usuario['cargo'] ?? ''}'),
-          Text('Email: ${usuario['email'] ?? ''}'),
-          Text('RUT: ${usuario['rut'] ?? ''}'),
+          if ((usuario['cargo'] ?? '').isNotEmpty)
+            Text('Cargo: ${usuario['cargo']}'),
+          if ((usuario['email'] ?? '').isNotEmpty)
+            Text('Email: ${usuario['email']}'),
+          if ((usuario['rutFormateado'] ?? '').isNotEmpty)
+            Text('RUT: ${usuario['rutFormateado']}'), // 👈 siempre mostrar formateado
         ],
       ),
-      trailing: Wrap(
-        spacing: 8,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.blue),
-            tooltip: 'Editar',
             onPressed: onEdit,
           ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
-            tooltip: 'Eliminar',
             onPressed: onDelete,
           ),
         ],

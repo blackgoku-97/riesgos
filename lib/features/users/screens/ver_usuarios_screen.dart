@@ -69,6 +69,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         .collection('perfiles')
         .where('rol', isEqualTo: 'usuario')
         .get();
+
     final lista = snap.docs.map((d) {
       final data = d.data();
       return {
@@ -78,6 +79,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         'cargo': data['cargo'] ?? '',
         'rol': data['rol'] ?? '',
         'rut': data['rut'] ?? '',
+        'rutFormateado': data['rutFormateado'] ?? '', // 👈 agregado
       };
     }).toList();
 
@@ -101,7 +103,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           final nombre = (u['nombre'] ?? '').toString().toLowerCase();
           final cargo = (u['cargo'] ?? '').toString().toLowerCase();
           final email = (u['email'] ?? '').toString().toLowerCase();
-          final rut = (u['rut'] ?? '').toString().toLowerCase();
+          final rut = (u['rutFormateado'] ?? u['rut'] ?? '').toString().toLowerCase();
           return nombre.contains(q) ||
               cargo.contains(q) ||
               email.contains(q) ||
@@ -162,7 +164,8 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           .update({
         'nombre': resultado['nombre']!,
         'cargo': resultado['cargo']!,
-        'rut': resultado['rut']!,
+        'rut': resultado['rut']!,                 // limpio
+        'rutFormateado': resultado['rutFormateado']!, // con puntos y guion
       });
       _refrescar();
     }

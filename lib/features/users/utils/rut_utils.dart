@@ -1,8 +1,7 @@
 import 'package:flutter/services.dart';
 
-/// Formatea un RUT en tiempo real con puntos y guion
 class RutInputFormatter extends TextInputFormatter {
-  static const int maxLength = 10; // 9 dígitos + DV
+  static const int maxLength = 10;
 
   @override
   TextEditingValue formatEditUpdate(
@@ -15,11 +14,8 @@ class RutInputFormatter extends TextInputFormatter {
       text = text.substring(0, maxLength);
     }
 
-    if (text.isEmpty) {
-      return newValue.copyWith(text: '');
-    }
+    if (text.isEmpty) return newValue.copyWith(text: '');
 
-    // separar cuerpo y dígito verificador
     String body = text;
     String dv = '';
     if (text.length > 1) {
@@ -27,7 +23,6 @@ class RutInputFormatter extends TextInputFormatter {
       dv = text.substring(text.length - 1).toUpperCase();
     }
 
-    // insertar puntos cada 3 dígitos desde la derecha
     final buffer = StringBuffer();
     int counter = 0;
     for (int i = body.length - 1; i >= 0; i--) {
@@ -49,7 +44,6 @@ class RutInputFormatter extends TextInputFormatter {
   }
 }
 
-/// Valida que el RUT tenga un dígito verificador correcto
 bool validarRut(String rut) {
   rut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
   if (rut.length < 2) return false;
@@ -69,7 +63,6 @@ bool validarRut(String rut) {
   return dvStr == dv;
 }
 
-/// Formatea un RUT ya guardado (ej. en Firestore) para mostrarlo
 String formatRut(String rut) {
   rut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
   if (rut.isEmpty) return '';
