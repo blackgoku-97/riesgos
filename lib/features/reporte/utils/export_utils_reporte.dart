@@ -10,7 +10,6 @@ import 'package:http/http.dart' as http;
 class ExportUtilsReporte {
   static const _campos = {
     'cargo': 'Cargo',
-    'rol': 'Rol',
     'lugar': 'Lugar',
     'tipoAccidente': 'Tipo de Accidente',
     'lesiones': 'Lesiones',
