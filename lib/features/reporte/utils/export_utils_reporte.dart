@@ -39,21 +39,29 @@ class ExportUtilsReporte {
     return DateTime.now();
   }
 
-  static List<List<String>> _buildRows(Map<String, dynamic> data) => _campos
-      .entries
-      .map((e) {
-        final v = data[e.key];
-        final txt = v is List ? v.join(', ') : v?.toString() ?? '';
-        return [e.value, txt];
-      })
-      .where((r) => r[1].isNotEmpty)
-      .toList();
+  /// 🔎 Aquí está la lógica que evita mostrar "lesiones" en cuasi accidentes
+  static List<List<String>> _buildRows(Map<String, dynamic> data) {
+    final tipo = (data['tipoAccidente'] ?? '').toString().toLowerCase();
+
+    return _campos.entries
+        .where((e) {
+          // 👇 si es cuasi accidente, no incluir lesiones
+          if (tipo.contains('cuasi') && e.key == 'lesiones') return false;
+          return true;
+        })
+        .map((e) {
+          final v = data[e.key];
+          final txt = v is List ? v.join(', ') : v?.toString() ?? '';
+          return [e.value, txt];
+        })
+        .where((r) => r[1].isNotEmpty)
+        .toList();
+  }
 
   static String _titulo(Map<String, dynamic> d) {
     var id = d['numeroReporte']?.toString() ?? '---';
-    // elimina "Reporte " si ya viene incluido
     id = id.replaceFirst(RegExp(r'^reporte\s*', caseSensitive: false), '');
-    return 'Reporte $id'; // 👈 sin año aquí
+    return 'Reporte $id';
   }
 
   static String _safe(String s) =>
@@ -76,7 +84,7 @@ class ExportUtilsReporte {
       ShareParams(
         files: [XFile(file.path)],
         text: '${_titulo(data)} exportado a Excel',
-      ),
+      )
     );
   }
 
@@ -127,7 +135,7 @@ class ExportUtilsReporte {
         build: (_) => [
           pw.Center(
             child: pw.Text(
-              '${_titulo(data)} - ${fechaReporte.year}', // 👈 año solo aquí
+              '${_titulo(data)} - ${fechaReporte.year}',
               style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
             ),
           ),
@@ -198,7 +206,7 @@ class ExportUtilsReporte {
       ShareParams(
         files: [XFile(file.path)],
         text: '${_titulo(data)} exportado a PDF',
-      ),
+      )
     );
   }
 }
