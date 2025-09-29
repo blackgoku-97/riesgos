@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
-import '../../auth/widgets/user_field.dart';
 import '../../auth/widgets/password_field.dart';
 import '../utils/rut_utils.dart';
 
@@ -14,9 +13,9 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nombreController = TextEditingController();
-  final _rutController = TextEditingController();
   final _cargoController = TextEditingController();
-  final _userController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _rutController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
   final _authService = AuthService();
@@ -25,16 +24,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _error;
 
   bool _nombreValid = false;
-  bool _rutValid = false;
   bool _cargoValid = false;
-  bool _userValid = false;
+  bool _emailValid = false;
+  bool _rutValid = false;
   bool _passValid = false;
   bool _confirmValid = false;
 
   String? _nombreError;
-  String? _rutError;
   String? _cargoError;
-  String? _userError;
+  String? _emailError;
+  String? _rutError;
   String? _passwordError;
   String? _confirmError;
 
@@ -60,21 +59,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {});
     });
 
-    _rutController.addListener(() {
-      final text = _rutController.text.trim();
-      if (text.isEmpty) {
-        _rutValid = false;
-        _rutError = null;
-      } else if (!_authService.isValidRUT(text)) {
-        _rutValid = false;
-        _rutError = 'RUT inválido';
-      } else {
-        _rutValid = true;
-        _rutError = null;
-      }
-      setState(() {});
-    });
-
     _cargoController.addListener(() {
       final text = _cargoController.text.trim();
       if (text.isEmpty) {
@@ -90,17 +74,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() {});
     });
 
-    _userController.addListener(() {
-      final text = _userController.text.trim();
+    _emailController.addListener(() {
+      final text = _emailController.text.trim();
       if (text.isEmpty) {
-        _userValid = false;
-        _userError = null;
-      } else if (!UserField.quickValidate(text, _authService)) {
-        _userValid = false;
-        _userError = 'Correo o RUT inválido';
+        _emailValid = false;
+        _emailError = null;
+      } else if (!_authService.isValidEmail(text)) {
+        _emailValid = false;
+        _emailError = 'Correo inválido';
       } else {
-        _userValid = true;
-        _userError = null;
+        _emailValid = true;
+        _emailError = null;
+      }
+      setState(() {});
+    });
+
+    _rutController.addListener(() {
+      final text = _rutController.text.trim();
+      if (text.isEmpty) {
+        _rutValid = false;
+        _rutError = null;
+      } else if (!_authService.isValidRUT(text)) {
+        _rutValid = false;
+        _rutError = 'RUT inválido';
+      } else {
+        _rutValid = true;
+        _rutError = null;
       }
       setState(() {});
     });
@@ -144,9 +143,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool get _formValid =>
       _nombreValid &&
-      _rutValid &&
       _cargoValid &&
-      _userValid &&
+      _emailValid &&
+      _rutValid &&
       _passValid &&
       _confirmValid;
 
@@ -162,9 +161,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       await _authService.registerUser(
         nombre: _nombreController.text.trim(),
-        rutFormateado: rutFormateado,
         cargo: _cargoController.text.trim(),
-        email: _userController.text.trim(),
+        rutFormateado: rutFormateado,
+        email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
@@ -205,16 +204,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextField(
-                  controller: _rutController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'RUT',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    errorText: _rutError,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
                   controller: _cargoController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
@@ -224,10 +213,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                UserField(
-                  controller: _userController,
-                  isValid: _userValid,
-                  errorText: _userError,
+                TextField(
+                  controller: _emailController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Correo electrónico',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    errorText: _emailError,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _rutController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'RUT',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    errorText: _rutError,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 PasswordField(
@@ -248,7 +251,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onToggleVisibility: () =>
                       setState(() => _obscureConfirm = !_obscureConfirm),
                   isValid: _confirmValid,
-                  errorText: _confirmError, helperText: '',
+                  errorText: _confirmError,
+                  helperText: '',
                 ),
                 const SizedBox(height: 12),
                 if (_error != null)
