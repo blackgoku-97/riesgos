@@ -18,7 +18,7 @@ class AuthService {
 
   Future<void> registerUser({
     required String nombre,
-    required String rut,
+    required String rutFormateado,
     required String cargo,
     required String email,
     required String password,
@@ -26,15 +26,9 @@ class AuthService {
     if (!_isValidEmail(email)) {
       throw Exception('El correo electrónico no es válido');
     }
-
-    final cleanRut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
-    if (cleanRut.length < 8) {
-      throw Exception('El RUT debe tener al menos 7 dígitos más el dígito verificador');
-    }
-    if (!_isValidRUT(rut)) {
+    if (!_isValidRUT(rutFormateado)) {
       throw Exception('El RUT ingresado no es válido (dígito verificador incorrecto)');
     }
-
     if (!_isValidPassword(password)) {
       throw Exception('La contraseña debe tener mínimo 8 caracteres, 1 mayúscula y 1 número');
     }
@@ -65,8 +59,8 @@ class AuthService {
 
     await perfilesRef.doc(cred.user!.uid).set({
       'nombre': capitalize(nombre),
-      'rut': rut,
       'cargo': capitalize(cargo),
+      'rutFormateado': rutFormateado,
       'email': email,
       'rol': rol,
       'createdAt': FieldValue.serverTimestamp(),
@@ -115,22 +109,16 @@ class AuthService {
 
   bool _isValidRUT(String rut) {
     final cleanRut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
-
-    if (cleanRut.length < 8) return false; // mínimo 7 dígitos + DV
-
+    if (cleanRut.length < 8) return false;
     final body = cleanRut.substring(0, cleanRut.length - 1);
     final dv = cleanRut.substring(cleanRut.length - 1);
-
     if (!RegExp(r'^\d+$').hasMatch(body)) return false;
-
     int sum = 0;
     int multiplier = 2;
-
     for (int i = body.length - 1; i >= 0; i--) {
       sum += int.parse(body[i]) * multiplier;
       multiplier = multiplier == 7 ? 2 : multiplier + 1;
     }
-
     final expectedDV = 11 - (sum % 11);
     String dvCalc;
     if (expectedDV == 11) {
@@ -140,7 +128,6 @@ class AuthService {
     } else {
       dvCalc = expectedDV.toString();
     }
-
     return dvCalc == dv;
   }
 

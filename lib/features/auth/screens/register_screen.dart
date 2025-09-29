@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/user_field.dart';
 import '../../auth/widgets/password_field.dart';
+import '../utils/rut_utils.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -156,9 +157,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
+      final rutInput = _rutController.text.trim().toUpperCase();
+      final rutFormateado = formatRut(rutInput);
+
       await _authService.registerUser(
         nombre: _nombreController.text.trim(),
-        rut: _rutController.text.trim(),
+        rutFormateado: rutFormateado,
         cargo: _cargoController.text.trim(),
         email: _userController.text.trim(),
         password: _passwordController.text.trim(),
