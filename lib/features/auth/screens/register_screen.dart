@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
 import '../utils/rut_utils.dart';
+import '../formatters/rut_input_formatter.dart' as formatters;
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -94,7 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (text.isEmpty) {
         _rutValid = false;
         _rutError = null;
-      } else if (!_authService.isValidRUT(text)) {
+      } else if (!validarRut(text)) {
         _rutValid = false;
         _rutError = 'RUT inválido';
       } else {
@@ -111,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordError = null;
       } else if (!_authService.isValidPassword(text)) {
         _passValid = false;
-        _passwordError = 'Mínimo 8 caracteres, 1 mayúscula y 1 número';
+        _passwordError = 'Máximo 8 caracteres';
       } else {
         _passValid = true;
         _passwordError = null;
@@ -225,6 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextField(
                   controller: _rutController,
+                  inputFormatters: [formatters.RutInputFormatter()],
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'RUT',
@@ -240,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onToggleVisibility: () =>
                       setState(() => _obscurePass = !_obscurePass),
                   isValid: _passValid,
-                  helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
+                  helperText: 'Máximo 8 caracteres',
                   errorText: _passwordError,
                 ),
                 const SizedBox(height: 16),
