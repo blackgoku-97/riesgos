@@ -104,13 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     _passwordController.addListener(() {
       final text = _passwordController.text.trim();
-      if (text.isEmpty) {
-        _passValid = false;
-      } else if (!_authService.isValidPassword(text)) {
-        _passValid = false;
-      } else {
-        _passValid = true;
-      }
+      _passValid = _authService.isValidPassword(text);
       setState(() {});
     });
   }
@@ -223,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscure: _obscureConfirm,
                   onToggleVisibility: () =>
                       setState(() => _obscureConfirm = !_obscureConfirm),
-                  originalController: _passwordController, // 👈 validación automática
+                  originalController: _passwordController,
                 ),
                 const SizedBox(height: 12),
                 if (_error != null)
