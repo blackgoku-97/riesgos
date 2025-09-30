@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
-import '../../auth/widgets/user_field.dart';
-import '../utils/rut_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,34 +11,28 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _userController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
   bool _loading = false;
   String? _error;
-  bool _obscurePass = true;
-  bool _userValid = false;
+  bool _emailValid = false;
   bool _passValid = false;
-
-  String? _userError;
-  String? _passwordError;
+  bool _obscurePass = true;
 
   @override
   void initState() {
     super.initState();
 
-    _userController.addListener(() {
-      final text = _userController.text.trim();
+    _emailController.addListener(() {
+      final text = _emailController.text.trim();
       if (text.isEmpty) {
-        _userValid = false;
-        _userError = null;
-      } else if (!UserField.quickValidate(text, _authService)) {
-        _userValid = false;
-        _userError = 'Ingresa un correo válido o un RUT válido';
+        _emailValid = false;
+      } else if (!_authService.isValidEmail(text)) {
+        _emailValid = false;
       } else {
-        _userValid = true;
-        _userError = null;
+        _emailValid = true;
       }
       setState(() {});
     });
@@ -49,47 +41,28 @@ class _LoginScreenState extends State<LoginScreen> {
       final text = _passwordController.text.trim();
       if (text.isEmpty) {
         _passValid = false;
-        _passwordError = null;
       } else if (!_authService.isValidPassword(text)) {
         _passValid = false;
-        _passwordError = 'Debe tener mínimo 8 caracteres, 1 mayúscula y 1 número';
       } else {
         _passValid = true;
-        _passwordError = null;
       }
       setState(() {});
     });
   }
 
-  bool get _formValid => _userValid && _passValid;
+  bool get _formValid => _emailValid && _passValid;
 
   Future<void> _login() async {
-    String userInput = _userController.text.trim();
-    final password = _passwordController.text.trim();
-
     setState(() {
       _loading = true;
       _error = null;
     });
 
     try {
-      String emailToUse = userInput;
-
-      if (_authService.isValidRUT(userInput.toUpperCase())) {
-        final rutFormateado = formatRut(userInput.toUpperCase());
-        final perfilesRef = _authService.db.collection('perfiles');
-        final query = await perfilesRef
-            .where('rutFormateado', isEqualTo: rutFormateado)
-            .limit(1)
-            .get();
-
-        if (query.docs.isEmpty) {
-          throw Exception('No existe un usuario con este RUT');
-        }
-        emailToUse = query.docs.first['email'];
-      }
-
-      await _authService.loginUser(email: emailToUse, password: password);
+      await _authService.loginUser(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/dashboard');
@@ -117,10 +90,13 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
-                UserField(
-                  controller: _userController,
-                  isValid: _userValid,
-                  errorText: _userError,
+                TextField(
+                  controller: _emailController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                    labelText: 'Correo electrónico',
+                    labelStyle: TextStyle(color: Colors.white70),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 PasswordField(
@@ -129,9 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscure: _obscurePass,
                   onToggleVisibility: () =>
                       setState(() => _obscurePass = !_obscurePass),
-                  isValid: _passValid,
-                  helperText: 'Mínimo 8 caracteres, 1 mayúscula y 1 número',
-                  errorText: _passwordError,
                 ),
                 const SizedBox(height: 12),
                 if (_error != null)
@@ -161,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         )
                       : const Text(
-                          'Iniciar sesión',
+                          'Ingresar',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -171,18 +144,42 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () =>
-                      Navigator.pushNamed(context, '/forgot-password'),
+                      Navigator.pushReplacementNamed(context, '/register'),
                   child: const Text(
-                    '¿Olvidaste tu contraseña?',
+                    '¿No tienes cuenta? Regístrate',
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
-                const SizedBox(height: 8),
                 TextButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, '/register'),
+                  onPressed: () async {
+                    if (_emailController.text.isNotEmpty &&
+                        _authService.isValidEmail(_emailController.text)) {
+                      try {
+                        await _authService.sendPasswordReset(
+                          _emailController.text.trim(),
+                        );
+                        if (!mounted) return;
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Se envió un correo para restablecer la contraseña',
+                              ),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                        }
+                      }
+                    }
+                  },
                   child: const Text(
-                    '¿No tienes cuenta? Regístrate',
+                    '¿Olvidaste tu contraseña?',
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),

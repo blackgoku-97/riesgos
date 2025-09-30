@@ -30,7 +30,7 @@ class AuthService {
       throw Exception('El RUT ingresado no es válido (dígito verificador incorrecto)');
     }
     if (!_isValidPassword(password)) {
-      throw Exception('La contraseña debe tener mínimo 8 caracteres, 1 mayúscula y 1 número');
+      throw Exception('La contraseña debe tener máximo 8 caracteres');
     }
     if (!startsWithCapital(nombre)) {
       throw Exception('El nombre debe comenzar con mayúscula');
@@ -75,7 +75,7 @@ class AuthService {
       throw Exception('El correo electrónico no es válido');
     }
     if (!_isValidPassword(password)) {
-      throw Exception('La contraseña debe tener mínimo 8 caracteres, 1 mayúscula y 1 número');
+      throw Exception('La contraseña debe tener máximo 8 caracteres');
     }
 
     try {
@@ -132,7 +132,6 @@ class AuthService {
   }
 
   bool _isValidPassword(String password) {
-    final regex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{8,}$');
-    return regex.hasMatch(password);
+    return password.isNotEmpty && password.length <= 8;
   }
 }

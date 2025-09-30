@@ -29,14 +29,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _emailValid = false;
   bool _rutValid = false;
   bool _passValid = false;
-  bool _confirmValid = false;
 
   String? _nombreError;
   String? _cargoError;
   String? _emailError;
   String? _rutError;
-  String? _passwordError;
-  String? _confirmError;
 
   bool _obscurePass = true;
   bool _obscureConfirm = true;
@@ -109,37 +106,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final text = _passwordController.text.trim();
       if (text.isEmpty) {
         _passValid = false;
-        _passwordError = null;
       } else if (!_authService.isValidPassword(text)) {
         _passValid = false;
-        _passwordError = 'Máximo 8 caracteres';
       } else {
         _passValid = true;
-        _passwordError = null;
       }
-      _validateConfirm();
       setState(() {});
     });
-
-    _confirmController.addListener(() {
-      _validateConfirm();
-      setState(() {});
-    });
-  }
-
-  void _validateConfirm() {
-    final pass = _passwordController.text.trim();
-    final confirm = _confirmController.text.trim();
-    if (confirm.isEmpty) {
-      _confirmValid = false;
-      _confirmError = null;
-    } else if (confirm != pass) {
-      _confirmValid = false;
-      _confirmError = 'Las contraseñas no coinciden';
-    } else {
-      _confirmValid = true;
-      _confirmError = null;
-    }
   }
 
   bool get _formValid =>
@@ -148,7 +121,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _emailValid &&
       _rutValid &&
       _passValid &&
-      _confirmValid;
+      _confirmController.text == _passwordController.text &&
+      _confirmController.text.isNotEmpty;
 
   Future<void> _register() async {
     setState(() {
@@ -241,9 +215,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscure: _obscurePass,
                   onToggleVisibility: () =>
                       setState(() => _obscurePass = !_obscurePass),
-                  isValid: _passValid,
-                  helperText: 'Máximo 8 caracteres',
-                  errorText: _passwordError,
                 ),
                 const SizedBox(height: 16),
                 PasswordField(
@@ -252,9 +223,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscure: _obscureConfirm,
                   onToggleVisibility: () =>
                       setState(() => _obscureConfirm = !_obscureConfirm),
-                  isValid: _confirmValid,
-                  errorText: _confirmError,
-                  helperText: '',
+                  originalController: _passwordController, // 👈 validación automática
                 ),
                 const SizedBox(height: 12),
                 if (_error != null)
