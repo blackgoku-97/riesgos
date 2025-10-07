@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
-import '../../auth/widgets/rut_field.dart';
 import '../../auth/widgets/email_autocomplete_field.dart';
+import '../../auth/widgets/rut_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -125,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final nav = Navigator.of(context); // capturamos antes del await
+      final nav = Navigator.of(context);
       await _authService.registerUser(
         nombre: _nombreController.text.trim(),
         cargo: _cargoController.text.trim(),
@@ -161,6 +161,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
+
+                // Nombre
                 TextField(
                   controller: _nombreController,
                   style: const TextStyle(color: Colors.white),
@@ -171,6 +173,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Cargo
                 TextField(
                   controller: _cargoController,
                   style: const TextStyle(color: Colors.white),
@@ -181,18 +185,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Correo electrónico
                 EmailAutocompleteField(
                   controller: _emailController,
                   isValid: _emailValid,
                   errorText: _emailError,
                 ),
                 const SizedBox(height: 16),
+
+                // RUT
                 RutField(
                   controller: _rutController,
                   isValid: _rutValid,
                   errorText: _rutError,
                 ),
                 const SizedBox(height: 16),
+
+                // Contraseña
                 PasswordField(
                   controller: _passwordController,
                   label: 'Contraseña',
@@ -201,6 +211,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       setState(() => _obscurePass = !_obscurePass),
                 ),
                 const SizedBox(height: 16),
+
+                // Confirmar contraseña
                 PasswordField(
                   controller: _confirmController,
                   label: 'Confirmar contraseña',
@@ -209,6 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       setState(() => _obscureConfirm = !_obscureConfirm),
                   originalController: _passwordController,
                 ),
+
                 const SizedBox(height: 12),
                 if (_error != null)
                   Text(
@@ -216,6 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: const TextStyle(color: Colors.redAccent),
                     textAlign: TextAlign.center,
                   ),
+
                 const SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -244,6 +258,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
                 ),
+
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
