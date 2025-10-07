@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
+import '../../auth/widgets/user_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,14 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
 
     _userController.addListener(() {
-      final text = _userController.text.trim();
-      if (text.isEmpty) {
-        _userValid = false;
-      } else if (_authService.isValidEmail(text) || _authService.isValidRut(text)) {
-        _userValid = true;
-      } else {
-        _userValid = false;
-      }
+      _userValid = UserField.quickValidate(_userController.text, _authService);
       setState(() {});
     });
 
@@ -93,19 +87,18 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
-                TextField(
+
+                // Campo único: correo o RUT
+                UserField(
                   controller: _userController,
-                  keyboardType: TextInputType.text,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Correo o RUT',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    errorText: !_userValid && _userController.text.isNotEmpty
-                        ? 'Debe ser un correo válido o un RUT válido'
-                        : null,
-                  ),
+                  isValid: _userValid,
+                  errorText: !_userValid && _userController.text.isNotEmpty
+                      ? 'Debe ser un correo válido o un RUT válido'
+                      : null,
                 ),
                 const SizedBox(height: 16),
+
+                // Contraseña
                 PasswordField(
                   controller: _passwordController,
                   label: 'Contraseña',
@@ -113,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onToggleVisibility: () =>
                       setState(() => _obscurePass = !_obscurePass),
                 ),
+
                 const SizedBox(height: 12),
                 if (_error != null)
                   Text(
@@ -120,6 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: const TextStyle(color: Colors.redAccent),
                     textAlign: TextAlign.center,
                   ),
+
                 const SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -148,6 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                 ),
+
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
@@ -159,6 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
+
                 TextButton(
                   onPressed: () async {
                     if (_authService.isValidEmail(_userController.text.trim())) {
