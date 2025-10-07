@@ -6,11 +6,13 @@ import 'delete_utils_planificacion.dart';
 class TarjetaUtilsPlanificacion extends StatelessWidget {
   final DocumentSnapshot doc;
   final VoidCallback onEditar;
+  final bool puedeEditar; // 👈 nuevo parámetro para controlar permisos
 
   const TarjetaUtilsPlanificacion({
     super.key,
     required this.doc,
     required this.onEditar,
+    this.puedeEditar = false, // por defecto no muestra botones de edición
   });
 
   Widget _buildButton({
@@ -70,6 +72,7 @@ class TarjetaUtilsPlanificacion extends StatelessWidget {
               ),
             ],
             espacio12,
+            // Botones de exportación (siempre visibles)
             Row(
               children: [
                 _buildButton(
@@ -85,26 +88,29 @@ class TarjetaUtilsPlanificacion extends StatelessWidget {
                 ),
               ],
             ),
-            espacio8,
-            Row(
-              children: [
-                _buildButton(
-                  text: 'Editar Planificación',
-                  color: Colors.black,
-                  onPressed: onEditar,
-                ),
-                const SizedBox(width: 8),
-                _buildButton(
-                  text: 'Eliminar Planificación',
-                  color: Colors.red,
-                  onPressed: () => DeleteUtilsPlanificacion.confirmarYEliminarPlanificacion(
-                    context: context,
-                    id: doc.id,
-                    urlImagen: data['urlImagen'],
+            // Botones de edición y eliminación (solo si puedeEditar = true)
+            if (puedeEditar) ...[
+              espacio8,
+              Row(
+                children: [
+                  _buildButton(
+                    text: 'Editar Planificación',
+                    color: Colors.black,
+                    onPressed: onEditar,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  _buildButton(
+                    text: 'Eliminar Planificación',
+                    color: Colors.red,
+                    onPressed: () => DeleteUtilsPlanificacion.confirmarYEliminarPlanificacion(
+                      context: context,
+                      id: doc.id,
+                      urlImagen: data['urlImagen'],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
