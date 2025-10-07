@@ -19,7 +19,7 @@ class UserField extends StatefulWidget {
   static bool quickValidate(String input, AuthService authService) {
     final text = input.trim();
     if (text.isEmpty) return false;
-    return authService.isValidEmail(text) || authService.isValidRUT(text.toUpperCase());
+    return authService.isValidEmail(text) || authService.isValidRut(text.toUpperCase());
   }
 
   @override

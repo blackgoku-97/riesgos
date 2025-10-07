@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
-import '../utils/rut_utils.dart';
-import '../formatters/rut_input_formatter.dart' as formatters;
+import '../../auth/widgets/rut_field.dart';
+import '../../auth/widgets/email_autocomplete_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -92,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (text.isEmpty) {
         _rutValid = false;
         _rutError = null;
-      } else if (!validarRut(text)) {
+      } else if (!_authService.isValidRut(text)) {
         _rutValid = false;
         _rutError = 'RUT inválido';
       } else {
@@ -125,20 +125,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      final rutInput = _rutController.text.trim().toUpperCase();
-      final rutFormateado = formatRut(rutInput);
-
+      final nav = Navigator.of(context); // capturamos antes del await
       await _authService.registerUser(
         nombre: _nombreController.text.trim(),
         cargo: _cargoController.text.trim(),
-        rutFormateado: rutFormateado,
+        rutFormateado: _authService.formatRut(_rutController.text.trim()),
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      nav.pushReplacementNamed('/dashboard');
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -182,25 +181,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                EmailAutocompleteField(
                   controller: _emailController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'Correo electrónico',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    errorText: _emailError,
-                  ),
+                  isValid: _emailValid,
+                  errorText: _emailError,
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                RutField(
                   controller: _rutController,
-                  inputFormatters: [formatters.RutInputFormatter()],
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: 'RUT',
-                    labelStyle: const TextStyle(color: Colors.white70),
-                    errorText: _rutError,
-                  ),
+                  isValid: _rutValid,
+                  errorText: _rutError,
                 ),
                 const SizedBox(height: 16),
                 PasswordField(
@@ -256,8 +246,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: () =>
-                      Navigator.pushReplacementNamed(context, '/login'),
+                  onPressed: () {
+                    if (!mounted) return;
+                    Navigator.pushReplacementNamed(context, '/login');
+                  },
                   child: const Text(
                     '¿Ya tienes cuenta? Inicia sesión',
                     style: TextStyle(color: Colors.white70),

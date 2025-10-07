@@ -46,7 +46,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       String emailToUse = userInput;
 
-      if (_authService.isValidRUT(userInput.toUpperCase())) {
+      if (_authService.isValidRut(userInput.toUpperCase())) {
         final perfilesRef = _authService.db.collection('perfiles');
         final query = await perfilesRef
             .where('rut', isEqualTo: userInput.toUpperCase())

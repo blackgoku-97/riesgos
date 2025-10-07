@@ -6,7 +6,7 @@ class AuthService {
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
   bool isValidEmail(String email) => _isValidEmail(email);
-  bool isValidRUT(String rut) => _isValidRUT(rut);
+  bool isValidRut(String rut) => _isValidRut(rut);
   bool isValidPassword(String password) => _isValidPassword(password);
   bool startsWithCapital(String text) =>
       text.isNotEmpty && text[0] == text[0].toUpperCase();
@@ -14,6 +14,24 @@ class AuthService {
   String capitalize(String text) {
     if (text.isEmpty) return text;
     return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  String formatRut(String rut) {
+    final clean = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
+    final body = clean.substring(0, clean.length - 1);
+    final dv = clean.substring(clean.length - 1);
+    final buffer = StringBuffer();
+    int counter = 0;
+    for (int i = body.length - 1; i >= 0; i--) {
+      buffer.write(body[i]);
+      counter++;
+      if (counter == 3 && i != 0) {
+        buffer.write('.');
+        counter = 0;
+      }
+    }
+    final reversed = buffer.toString().split('').reversed.join('');
+    return '$reversed-$dv';
   }
 
   Future<void> registerUser({
@@ -26,11 +44,11 @@ class AuthService {
     if (!_isValidEmail(email)) {
       throw Exception('El correo electrónico no es válido');
     }
-    if (!_isValidRUT(rutFormateado)) {
+    if (!_isValidRut(rutFormateado)) {
       throw Exception('El RUT ingresado no es válido (dígito verificador incorrecto)');
     }
     if (!_isValidPassword(password)) {
-      throw Exception('La contraseña debe tener máximo 8 caracteres');
+      throw Exception('La contraseña debe tener al menos 8 caracteres, incluyendo letras y números');
     }
     if (!startsWithCapital(nombre)) {
       throw Exception('El nombre debe comenzar con mayúscula');
@@ -60,11 +78,37 @@ class AuthService {
     await perfilesRef.doc(cred.user!.uid).set({
       'nombre': capitalize(nombre),
       'cargo': capitalize(cargo),
-      'rutFormateado': rutFormateado,
+      'rutFormateado': formatRut(rutFormateado),
       'email': email,
       'rol': rol,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> loginUserFlexible({
+    required String userInput,
+    required String password,
+  }) async {
+    String emailFinal;
+
+    if (_isValidEmail(userInput)) {
+      emailFinal = userInput;
+    } else if (_isValidRut(userInput)) {
+      final snapshot = await db
+          .collection('perfiles')
+          .where('rutFormateado', isEqualTo: formatRut(userInput))
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        throw Exception('No existe un usuario con ese RUT');
+      }
+      emailFinal = snapshot.docs.first['email'];
+    } else {
+      throw Exception('Debes ingresar un correo válido o un RUT válido');
+    }
+
+    return loginUser(email: emailFinal, password: password);
   }
 
   Future<void> loginUser({
@@ -75,7 +119,7 @@ class AuthService {
       throw Exception('El correo electrónico no es válido');
     }
     if (!_isValidPassword(password)) {
-      throw Exception('La contraseña debe tener máximo 8 caracteres');
+      throw Exception('La contraseña debe tener al menos 8 caracteres, incluyendo letras y números');
     }
 
     try {
@@ -107,18 +151,22 @@ class AuthService {
     return regex.hasMatch(email);
   }
 
-  bool _isValidRUT(String rut) {
+  bool _isValidRut(String rut) {
     final cleanRut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
-    if (cleanRut.length < 8) return false;
+    if (cleanRut.length < 2) return false;
+
     final body = cleanRut.substring(0, cleanRut.length - 1);
     final dv = cleanRut.substring(cleanRut.length - 1);
+
     if (!RegExp(r'^\d+$').hasMatch(body)) return false;
+
     int sum = 0;
     int multiplier = 2;
     for (int i = body.length - 1; i >= 0; i--) {
       sum += int.parse(body[i]) * multiplier;
       multiplier = multiplier == 7 ? 2 : multiplier + 1;
     }
+
     final expectedDV = 11 - (sum % 11);
     String dvCalc;
     if (expectedDV == 11) {
@@ -128,10 +176,12 @@ class AuthService {
     } else {
       dvCalc = expectedDV.toString();
     }
+
     return dvCalc == dv;
   }
 
   bool _isValidPassword(String password) {
-    return password.isNotEmpty && password.length <= 8;
+    final regex = RegExp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,}$');
+    return regex.hasMatch(password);
   }
 }
