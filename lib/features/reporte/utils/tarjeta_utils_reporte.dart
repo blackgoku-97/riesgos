@@ -6,11 +6,13 @@ import 'delete_utils_reporte.dart';
 class TarjetaUtilsReporte extends StatelessWidget {
   final DocumentSnapshot doc;
   final VoidCallback onEditar;
+  final bool puedeEditar; // 👈 nuevo parámetro
 
   const TarjetaUtilsReporte({
     super.key,
     required this.doc,
     required this.onEditar,
+    this.puedeEditar = false, // por defecto no muestra botones de edición
   });
 
   Widget _buildButton({
@@ -79,6 +81,7 @@ class TarjetaUtilsReporte extends StatelessWidget {
               ),
             ],
             espacio12,
+            // Botones de exportación (siempre visibles)
             Row(
               children: [
                 _buildButton(
@@ -94,26 +97,29 @@ class TarjetaUtilsReporte extends StatelessWidget {
                 ),
               ],
             ),
-            espacio8,
-            Row(
-              children: [
-                _buildButton(
-                  text: 'Editar Reporte',
-                  color: Colors.black,
-                  onPressed: onEditar,
-                ),
-                const SizedBox(width: 8),
-                _buildButton(
-                  text: 'Eliminar Reporte',
-                  color: Colors.red,
-                  onPressed: () => DeleteUtilsReporte.confirmarYEliminarReporte(
-                    context: context,
-                    id: doc.id,
-                    urlImagen: data['urlImagen'],
+            // Botones de edición y eliminación (solo si puedeEditar = true)
+            if (puedeEditar) ...[
+              espacio8,
+              Row(
+                children: [
+                  _buildButton(
+                    text: 'Editar Reporte',
+                    color: Colors.black,
+                    onPressed: onEditar,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  _buildButton(
+                    text: 'Eliminar Reporte',
+                    color: Colors.red,
+                    onPressed: () => DeleteUtilsReporte.confirmarYEliminarReporte(
+                      context: context,
+                      id: doc.id,
+                      urlImagen: data['urlImagen'],
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
