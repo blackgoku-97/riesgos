@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
-import '../../auth/widgets/email_autocomplete_field.dart';
-import '../../auth/widgets/rut_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,15 +11,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _rutController = TextEditingController();
+  final _userController = TextEditingController(); // único campo correo/RUT
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
   bool _loading = false;
   String? _error;
-  bool _emailValid = false;
-  bool _rutValid = false;
+  bool _userValid = false;
   bool _passValid = false;
   bool _obscurePass = true;
 
@@ -29,15 +25,15 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
 
-    _emailController.addListener(() {
-      final text = _emailController.text.trim();
-      _emailValid = text.isNotEmpty && _authService.isValidEmail(text);
-      setState(() {});
-    });
-
-    _rutController.addListener(() {
-      final text = _rutController.text.trim();
-      _rutValid = text.isNotEmpty && _authService.isValidRut(text);
+    _userController.addListener(() {
+      final text = _userController.text.trim();
+      if (text.isEmpty) {
+        _userValid = false;
+      } else if (_authService.isValidEmail(text) || _authService.isValidRut(text)) {
+        _userValid = true;
+      } else {
+        _userValid = false;
+      }
       setState(() {});
     });
 
@@ -48,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  bool get _formValid => (_emailValid || _rutValid) && _passValid;
+  bool get _formValid => _userValid && _passValid;
 
   Future<void> _login() async {
     setState(() {
@@ -57,13 +53,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final userInput = _emailValid
-          ? _emailController.text.trim()
-          : _rutController.text.trim();
-
-      final nav = Navigator.of(context); // capturamos antes del await
+      final nav = Navigator.of(context);
       await _authService.loginUserFlexible(
-        userInput: userInput,
+        userInput: _userController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
@@ -73,16 +65,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _rutController.dispose();
+    _userController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -104,20 +93,17 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
-                EmailAutocompleteField(
-                  controller: _emailController,
-                  isValid: _emailValid,
-                  errorText: !_emailValid && _emailController.text.isNotEmpty
-                      ? 'Correo inválido'
-                      : null,
-                ),
-                const SizedBox(height: 16),
-                RutField(
-                  controller: _rutController,
-                  isValid: _rutValid,
-                  errorText: !_rutValid && _rutController.text.isNotEmpty
-                      ? 'RUT inválido'
-                      : null,
+                TextField(
+                  controller: _userController,
+                  keyboardType: TextInputType.text,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Correo o RUT',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    errorText: !_userValid && _userController.text.isNotEmpty
+                        ? 'Debe ser un correo válido o un RUT válido'
+                        : null,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 PasswordField(
@@ -175,11 +161,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
-                    if (_emailValid) {
-                      final messenger = ScaffoldMessenger.of(context); // capturamos antes del await
+                    if (_authService.isValidEmail(_userController.text.trim())) {
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         await _authService.sendPasswordReset(
-                          _emailController.text.trim(),
+                          _userController.text.trim(),
                         );
                         if (!mounted) return;
                         messenger.showSnackBar(

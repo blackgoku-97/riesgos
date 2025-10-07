@@ -18,16 +18,19 @@ class EmailAutocompleteField extends StatefulWidget {
 }
 
 class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
-  final List<String> dominios = ['gmail.com', 'outlook.com', 'hotmail.com', 'phos-chek.cl'];
+  final List<String> dominios = [
+    'gmail.com',
+    'outlook.com',
+    'hotmail.com',
+    'phos-chek.cl'
+  ];
 
   Timer? _debounce;
   Iterable<String> _options = const [];
 
   void _onTextChanged(String value) {
-    // Cancelar debounce previo
     _debounce?.cancel();
 
-    // Esperar 150ms antes de calcular sugerencias
     _debounce = Timer(const Duration(milliseconds: 150), () {
       if (!value.contains('@')) {
         setState(() => _options = const []);
@@ -37,9 +40,15 @@ class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
       final prefix = value.split('@').first;
       final typedDomain = value.split('@').last;
 
-      final matches = dominios
-          .where((d) => d.startsWith(typedDomain))
-          .map((d) => '$prefix@$d');
+      Iterable<String> matches;
+      if (typedDomain.isEmpty) {
+        // Mostrar todos los dominios si solo se escribió el @
+        matches = dominios.map((d) => '$prefix@$d');
+      } else {
+        matches = dominios
+            .where((d) => d.startsWith(typedDomain))
+            .map((d) => '$prefix@$d');
+      }
 
       setState(() => _options = matches);
     });
@@ -61,7 +70,8 @@ class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
       onSelected: (String selection) {
         widget.controller.text = selection;
       },
-      fieldViewBuilder: (context, textEditingController, focusNode, onFieldSubmitted) {
+      fieldViewBuilder:
+          (context, textEditingController, focusNode, onFieldSubmitted) {
         return TextField(
           controller: widget.controller,
           focusNode: focusNode,
