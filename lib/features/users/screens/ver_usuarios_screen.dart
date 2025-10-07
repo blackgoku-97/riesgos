@@ -21,6 +21,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   List<Map<String, dynamic>> _usuarios = [];
   List<Map<String, dynamic>> _filtrados = [];
   final TextEditingController _searchCtrl = TextEditingController();
+  String? _rolUsuario;
 
   @override
   void initState() {
@@ -40,6 +41,9 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           .doc(user.uid)
           .get();
       final rol = (doc.data()?['rol'] ?? '').toString().trim().toLowerCase();
+      setState(() {
+        _rolUsuario = rol;
+      });
       if (rol != 'admin') {
         _redirigirALogin('No tienes permisos de administrador');
         return;
@@ -79,7 +83,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         'cargo': data['cargo'] ?? '',
         'rol': data['rol'] ?? '',
         'rut': data['rut'] ?? '',
-        'rutFormateado': data['rutFormateado'] ?? '', // 👈 agregado
+        'rutFormateado': data['rutFormateado'] ?? '',
       };
     }).toList();
 
@@ -164,8 +168,8 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           .update({
         'nombre': resultado['nombre']!,
         'cargo': resultado['cargo']!,
-        'rut': resultado['rut']!,                 // limpio
-        'rutFormateado': resultado['rutFormateado']!, // con puntos y guion
+        'rut': resultado['rut']!,
+        'rutFormateado': resultado['rutFormateado']!,
       });
       _refrescar();
     }
@@ -179,49 +183,66 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         backgroundColor: AppColors.rojo,
         title: const Text('Usuarios'),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _usuariosFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          if (_filtrados.isEmpty) {
-            return Column(
-              children: [
-                UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
-                const Expanded(
-                  child: Center(child: Text('No hay usuarios registrados')),
-                ),
-              ],
-            );
-          }
-          return Column(
-            children: [
-              UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: _refrescar,
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filtrados.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final u = _filtrados[index];
-                      return UserListTile(
-                        usuario: u,
-                        onEdit: () => _editarUsuario(u),
-                        onDelete: () => _eliminarUsuario(u['id']),
-                      );
-                    },
-                  ),
-                ),
+      body: Column(
+        children: [
+          if (_rolUsuario != null)
+            Container(
+              width: double.infinity,
+              color: _rolUsuario == 'admin' ? Colors.green : Colors.orange,
+              padding: const EdgeInsets.all(8),
+              child: Text(
+                'Estás logueado como ${_rolUsuario!.toUpperCase()}',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
-            ],
-          );
-        },
+            ),
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _usuariosFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (_filtrados.isEmpty) {
+                  return Column(
+                    children: [
+                      UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
+                      const Expanded(
+                        child: Center(child: Text('No hay usuarios registrados')),
+                      ),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _refrescar,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filtrados.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final u = _filtrados[index];
+                            return UserListTile(
+                              usuario: u,
+                              onEdit: () => _editarUsuario(u),
+                              onDelete: () => _eliminarUsuario(u['id']),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
