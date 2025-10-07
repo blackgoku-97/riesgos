@@ -40,15 +40,11 @@ class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
       final prefix = value.split('@').first;
       final typedDomain = value.split('@').last;
 
-      Iterable<String> matches;
-      if (typedDomain.isEmpty) {
-        // Mostrar todos los dominios si solo se escribió el @
-        matches = dominios.map((d) => '$prefix@$d');
-      } else {
-        matches = dominios
-            .where((d) => d.startsWith(typedDomain))
-            .map((d) => '$prefix@$d');
-      }
+      final matches = typedDomain.isEmpty
+          ? dominios.map((d) => '$prefix@$d')
+          : dominios
+              .where((d) => d.startsWith(typedDomain))
+              .map((d) => '$prefix@$d');
 
       setState(() => _options = matches);
     });
@@ -72,8 +68,15 @@ class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
       },
       fieldViewBuilder:
           (context, textEditingController, focusNode, onFieldSubmitted) {
+        // 🔑 sincronizamos el controller externo con el interno
+        textEditingController.addListener(() {
+          if (widget.controller.text != textEditingController.text) {
+            widget.controller.value = textEditingController.value;
+          }
+        });
+
         return TextField(
-          controller: widget.controller,
+          controller: textEditingController, // 👈 usar SIEMPRE el de Autocomplete
           focusNode: focusNode,
           keyboardType: TextInputType.emailAddress,
           style: const TextStyle(color: Colors.white),
@@ -86,7 +89,7 @@ class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: widget.controller.text.isEmpty
+                color: textEditingController.text.isEmpty
                     ? Colors.transparent
                     : widget.isValid
                         ? Colors.green
@@ -97,7 +100,7 @@ class _EmailAutocompleteFieldState extends State<EmailAutocompleteField> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: widget.controller.text.isEmpty
+                color: textEditingController.text.isEmpty
                     ? Colors.blue
                     : widget.isValid
                         ? Colors.green
