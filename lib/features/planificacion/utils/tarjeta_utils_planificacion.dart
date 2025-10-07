@@ -6,13 +6,15 @@ import 'delete_utils_planificacion.dart';
 class TarjetaUtilsPlanificacion extends StatelessWidget {
   final DocumentSnapshot doc;
   final VoidCallback onEditar;
-  final bool puedeEditar; // 👈 nuevo parámetro para controlar permisos
+  final bool puedeEditar;
+  final bool esAdmin;
 
   const TarjetaUtilsPlanificacion({
     super.key,
     required this.doc,
     required this.onEditar,
-    this.puedeEditar = false, // por defecto no muestra botones de edición
+    this.puedeEditar = false,
+    this.esAdmin = false,
   });
 
   Widget _buildButton({
@@ -34,6 +36,8 @@ class TarjetaUtilsPlanificacion extends StatelessWidget {
     final espacio8 = const SizedBox(height: 8);
     final espacio12 = const SizedBox(height: 12);
     final data = doc.data() as Map<String, dynamic>;
+    final creadoPorRol = data['creadoPorRol'] ?? 'usuario';
+    final puedeVerRiesgo = esAdmin || creadoPorRol == 'admin';
 
     final info = [
       '📅 Fecha: ${data['fechaPlanificacionLocal'] ?? ''}',
@@ -45,7 +49,11 @@ class TarjetaUtilsPlanificacion extends StatelessWidget {
       '⚠️ Peligros: ${(data['peligros'] as List?)?.join(", ") ?? "—"}',
       '🧪 Agente Material: ${(data['agenteMaterial'] as List?)?.join(", ") ?? "—"}',
       '🛡️ Medidas: ${(data['medidas'] as List?)?.join(", ") ?? "—"}',
-      '📉 Riesgo: ${data['nivelRiesgo'] ?? ''}',
+      if (puedeVerRiesgo) ...[
+        '📊 Frecuencia: ${data['frecuencia'] ?? ''}',
+        '📊 Severidad: ${data['severidad'] ?? ''}',
+        '📉 Riesgo: ${data['nivelRiesgo'] ?? ''}',
+      ],
     ];
 
     return Card(
@@ -68,11 +76,12 @@ class TarjetaUtilsPlanificacion extends StatelessWidget {
                   data['urlImagen'],
                   height: 200,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image, size: 80, color: Colors.grey),
                 ),
               ),
             ],
             espacio12,
-            // Botones de exportación (siempre visibles)
             Row(
               children: [
                 _buildButton(
@@ -88,7 +97,6 @@ class TarjetaUtilsPlanificacion extends StatelessWidget {
                 ),
               ],
             ),
-            // Botones de edición y eliminación (solo si puedeEditar = true)
             if (puedeEditar) ...[
               espacio8,
               Row(

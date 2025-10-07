@@ -6,13 +6,15 @@ import 'delete_utils_reporte.dart';
 class TarjetaUtilsReporte extends StatelessWidget {
   final DocumentSnapshot doc;
   final VoidCallback onEditar;
-  final bool puedeEditar; // 👈 nuevo parámetro
+  final bool puedeEditar;
+  final bool esAdmin;
 
   const TarjetaUtilsReporte({
     super.key,
     required this.doc,
     required this.onEditar,
-    this.puedeEditar = false, // por defecto no muestra botones de edición
+    this.puedeEditar = false,
+    this.esAdmin = false,
   });
 
   Widget _buildButton({
@@ -35,16 +37,16 @@ class TarjetaUtilsReporte extends StatelessWidget {
     final espacio12 = const SizedBox(height: 12);
     final data = doc.data() as Map<String, dynamic>;
 
+    final creadoPorRol = data['creadoPorRol'] ?? 'usuario';
+    final puedeVerPotencial = esAdmin || creadoPorRol == 'admin';
+
     final info = [
       '📅 Fecha: ${data['fechaReporteLocal'] ?? ''}',
       '👤 Cargo: ${data['cargo'] ?? ''}',
       '📍 Lugar: ${data['lugar'] ?? ''}',
       '💥 Tipo de Accidente: ${data['tipoAccidente'] ?? ''}',
-
-      // 👇 Solo mostrar lesiones si NO es cuasi accidente
       if (data['tipoAccidente'] != 'Cuasi Accidente')
         '🤕 Lesiones: ${(data['lesiones'] as List?)?.join(", ") ?? "—"}',
-
       '🔧 Actividad: ${data['actividad'] ?? ''}',
       '📊 Clasificación: ${data['clasificacion'] ?? ''}',
       '⚠️ Acciones Inseguras: ${(data['accionesInseguras'] as List?)?.join(", ") ?? "—"}',
@@ -52,9 +54,11 @@ class TarjetaUtilsReporte extends StatelessWidget {
       '🛡️ Medidas: ${(data['medidas'] as List?)?.join(", ") ?? "—"}',
       '👥 ¿A quién le ocurrió?: ${data['quienAfectado'] ?? ''}',
       '📝 Descripción: ${data['descripcion'] ?? ''}',
-      '📈 Frecuencia: ${data['frecuencia'] ?? ''}',
-      '📉 Severidad: ${data['severidad'] ?? ''}',
-      '🔥 Potencial: ${data['nivelPotencial'] ?? ''}',
+      if (puedeVerPotencial) ...[
+        '📈 Frecuencia: ${data['frecuencia'] ?? ''}',
+        '📉 Severidad: ${data['severidad'] ?? ''}',
+        '🔥 Potencial: ${data['nivelPotencial'] ?? ''}',
+      ],
     ];
 
     return Card(
@@ -77,11 +81,12 @@ class TarjetaUtilsReporte extends StatelessWidget {
                   data['urlImagen'],
                   height: 200,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image, size: 80, color: Colors.grey),
                 ),
               ),
             ],
             espacio12,
-            // Botones de exportación (siempre visibles)
             Row(
               children: [
                 _buildButton(
@@ -97,7 +102,6 @@ class TarjetaUtilsReporte extends StatelessWidget {
                 ),
               ],
             ),
-            // Botones de edición y eliminación (solo si puedeEditar = true)
             if (puedeEditar) ...[
               espacio8,
               Row(
