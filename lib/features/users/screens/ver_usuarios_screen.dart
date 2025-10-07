@@ -137,10 +137,24 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       builder: (_) => const ConfirmDeleteDialog(),
     );
     if (confirmar != true) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay sesión activa en FirebaseAuth')),
+      );
+      return;
+    }
+
     try {
+      // 👇 fuerza token fresco antes de llamar a la función
+      await user.getIdToken(true);
+
       await FirebaseFunctions.instance
           .httpsCallable('eliminarUsuario')
           .call({'uid': id});
+
       await _refrescar();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
