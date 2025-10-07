@@ -32,6 +32,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   Future<void> _verificarAdmin() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
+      if (!mounted) return;
       _redirigirALogin('Debes iniciar sesión como administrador');
       return;
     }
@@ -40,11 +41,15 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           .collection('perfiles')
           .doc(user.uid)
           .get();
+
+      if (!mounted) return;
+
       final rol = (doc.data()?['rol'] ?? '').toString().trim().toLowerCase();
       setState(() {
         _rolUsuario = rol;
       });
       if (rol != 'admin') {
+        if (!mounted) return;
         _redirigirALogin('No tienes permisos de administrador');
         return;
       }
@@ -52,20 +57,20 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         _usuariosFuture = _cargarUsuarios();
       });
     } catch (e) {
+      if (!mounted) return;
       _redirigirALogin('Error verificando permisos: $e');
     }
   }
 
   void _redirigirALogin(String mensaje) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensaje)),
-      );
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
-    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
+    );
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   Future<List<Map<String, dynamic>>> _cargarUsuarios() async {
@@ -119,6 +124,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
 
   Future<void> _refrescar() async {
     final lista = await _cargarUsuarios();
+    if (!mounted) return;
     setState(() {
       _usuarios = lista;
       _filtrados = lista;
@@ -136,23 +142,20 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           .httpsCallable('eliminarUsuario')
           .call({'uid': id});
       await _refrescar();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario eliminado correctamente')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuario eliminado correctamente')),
+      );
     } on FirebaseFunctionsException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.message}')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.message}')),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error inesperado: $e')),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error inesperado: $e')),
+      );
     }
   }
 
@@ -171,6 +174,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         'rut': resultado['rut']!,
         'rutFormateado': resultado['rutFormateado']!,
       });
+      if (!mounted) return;
       _refrescar();
     }
   }
