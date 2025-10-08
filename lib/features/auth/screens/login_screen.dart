@@ -3,6 +3,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
 import '../../auth/widgets/user_field.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -53,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       // Debug: confirmar sesión
-      final user = _authService.currentUser;
+      final user = FirebaseAuth.instance.currentUser;
       debugPrint('UID tras login: ${user?.uid}');
       debugPrint('Email tras login: ${user?.email}');
 
