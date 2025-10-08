@@ -149,7 +149,8 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
 
     try {
       // 👇 fuerza token fresco antes de llamar a la función
-      await user.getIdToken(true);
+      final token = await user.getIdToken(true);
+      debugPrint('Token renovado: $token');
 
       await FirebaseFunctions.instance
           .httpsCallable('eliminarUsuario')

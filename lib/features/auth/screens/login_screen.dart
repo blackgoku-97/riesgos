@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _userController = TextEditingController(); // único campo correo/RUT
+  final _userController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
 
@@ -47,14 +47,18 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final nav = Navigator.of(context);
       await _authService.loginUserFlexible(
         userInput: _userController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
+      // Debug: confirmar sesión
+      final user = _authService.currentUser;
+      debugPrint('UID tras login: ${user?.uid}');
+      debugPrint('Email tras login: ${user?.email}');
+
       if (!mounted) return;
-      nav.pushReplacementNamed('/dashboard');
+      Navigator.of(context).pushReplacementNamed('/dashboard');
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
@@ -88,7 +92,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
 
-                // Campo único: correo o RUT
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
@@ -98,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Contraseña
                 PasswordField(
                   controller: _passwordController,
                   label: 'Contraseña',
@@ -142,48 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                ),
-
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    if (!mounted) return;
-                    Navigator.pushReplacementNamed(context, '/register');
-                  },
-                  child: const Text(
-                    '¿No tienes cuenta? Regístrate',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-
-                TextButton(
-                  onPressed: () async {
-                    if (_authService.isValidEmail(_userController.text.trim())) {
-                      final messenger = ScaffoldMessenger.of(context);
-                      try {
-                        await _authService.sendPasswordReset(
-                          _userController.text.trim(),
-                        );
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Se envió un correo para restablecer la contraseña',
-                            ),
-                          ),
-                        );
-                      } catch (e) {
-                        if (!mounted) return;
-                        messenger.showSnackBar(
-                          SnackBar(content: Text('Error: $e')),
-                        );
-                      }
-                    }
-                  },
-                  child: const Text(
-                    '¿Olvidaste tu contraseña?',
-                    style: TextStyle(color: Colors.white70),
-                  ),
                 ),
               ],
             ),

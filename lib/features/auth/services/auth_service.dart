@@ -5,6 +5,9 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
+  // 👇 Getter para acceder al usuario actual desde tu UI
+  User? get currentUser => _auth.currentUser;
+
   bool isValidEmail(String email) => _isValidEmail(email);
   bool isValidRut(String rut) => _isValidRut(rut);
   bool isValidPassword(String password) => _isValidPassword(password);
