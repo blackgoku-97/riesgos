@@ -148,11 +148,13 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     }
 
     try {
-      // 👇 fuerza token fresco antes de llamar a la función
+      // 🔎 Debug: confirmar token antes de llamar
       final token = await user.getIdToken(true);
+      debugPrint('UID actual: ${user.uid}');
+      debugPrint('Email actual: ${user.email}');
       debugPrint('Token válido: ${token?.split('.').length == 3}');
 
-      // 👇 usa la región correcta de tu función
+      // 👇 usa la región correcta
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
       await functions.httpsCallable('eliminarUsuario').call({'uid': id});
 

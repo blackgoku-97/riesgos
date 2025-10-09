@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
 import '../../auth/widgets/user_field.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -53,10 +53,16 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // Debug: confirmar sesión
+      // 🔎 Confirmar sesión y token
       final user = FirebaseAuth.instance.currentUser;
-      debugPrint('UID tras login: ${user?.uid}');
-      debugPrint('Email tras login: ${user?.email}');
+      if (user != null) {
+        final token = await user.getIdToken(true);
+        debugPrint('✅ UID tras login: ${user.uid}');
+        debugPrint('✅ Email tras login: ${user.email}');
+        debugPrint('✅ Token válido: ${token?.split('.').length == 3}');
+      } else {
+        debugPrint('❌ No hay sesión en FirebaseAuth');
+      }
 
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/dashboard');
