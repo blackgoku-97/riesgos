@@ -129,6 +129,11 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
 
     try {
       final token = await user.getIdToken(true);
+      debugPrint('👤 Admin UID actual: ${user.uid}');
+      debugPrint('👤 Admin Email actual: ${user.email}');
+      debugPrint('🔑 Token válido: ${token?.split('.').length == 3}');
+      debugPrint('🗑 Eliminando UID objetivo: $id');
+
       final url = Uri.parse('https://us-central1-TU_PROYECTO.cloudfunctions.net/eliminarUsuario');
 
       final response = await http.post(
@@ -139,6 +144,8 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         },
         body: jsonEncode({'uid': id}),
       );
+
+      debugPrint('🔎 Respuesta backend: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode == 200) {
         await _refrescar();
@@ -152,7 +159,9 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           SnackBar(content: Text('Error: ${response.body}')),
         );
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('❌ Error inesperado: $e');
+      debugPrint('📌 StackTrace: $stack');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error inesperado: $e')),
