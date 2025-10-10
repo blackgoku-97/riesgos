@@ -71,7 +71,7 @@ class AuthService {
       totalUsuarios = snap.docs.length;
     }
 
-    final rol = totalUsuarios < 3 ? 'admin' : 'usuario';
+    final rol = totalUsuarios < 2 ? 'admin' : 'usuario';
 
     final cred = await _auth.createUserWithEmailAndPassword(
       email: email,
