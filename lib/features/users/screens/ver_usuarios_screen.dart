@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:firebase_core/firebase_core.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/screens/login_screen.dart';
 import '../widgets/user_list_tile.dart';
@@ -128,37 +128,21 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     }
 
     try {
-      final token = await user.getIdToken(true);
-      debugPrint('👤 Admin UID actual: ${user.uid}');
-      debugPrint('👤 Admin Email actual: ${user.email}');
-      debugPrint('🔑 Token válido: ${token?.split('.').length == 3}');
-      debugPrint('🗑 Eliminando UID objetivo: $id');
-
-      final url = Uri.parse('https://us-central1-TU_PROYECTO.cloudfunctions.net/eliminarUsuario');
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({'uid': id}),
+      final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'us-central1');
+      final callable = functions.httpsCallable('eliminarUsuario');
+      final result = await callable.call({'uid': id});
+      debugPrint('✅ Respuesta función: ${result.data}');
+      await _refrescar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuario eliminado correctamente')),
       );
-
-      debugPrint('🔎 Respuesta backend: ${response.statusCode} - ${response.body}');
-
-      if (response.statusCode == 200) {
-        await _refrescar();
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario eliminado correctamente')),
-        );
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
-        );
-      }
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('❌ FirebaseFunctionsException: ${e.code} - ${e.message}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.message}')),
+      );
     } catch (e, stack) {
       debugPrint('❌ Error inesperado: $e');
       debugPrint('📌 StackTrace: $stack');

@@ -1,36 +1,40 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const { getAuth } = require("firebase-admin/auth");
 
 admin.initializeApp();
 
-exports.eliminarUsuario = functions.https.onRequest(async (req, res) => {
-  const authHeader = req.headers.authorization || "";
-  const match = authHeader.match(/^Bearer (.*)$/);
-  if (!match) {
-    return res.status(401).json({ error: "Debes estar autenticado" });
+exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      "unauthenticated",
+      "Debes estar autenticado para realizar esta acción."
+    );
+  }
+
+  const callerUid = context.auth.uid;
+  const callerDoc = await admin.firestore().collection("perfiles").doc(callerUid).get();
+  const callerRol = (callerDoc.data()?.rol || "").toLowerCase();
+
+  if (!callerDoc.exists || callerRol !== "admin") {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "No tienes permisos para eliminar usuarios."
+    );
+  }
+
+  const uid = data.uid;
+  if (!uid) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Debes proporcionar el UID del usuario a eliminar."
+    );
   }
 
   try {
-    const decoded = await getAuth().verifyIdToken(match[1]);
-    const callerUid = decoded.uid;
-    const callerDoc = await admin.firestore().collection("perfiles").doc(callerUid).get();
-    const callerRol = (callerDoc.data()?.rol || "").toLowerCase();
-
-    if (!callerDoc.exists || callerRol !== "admin") {
-      return res.status(403).json({ error: "No tienes permisos para eliminar usuarios" });
-    }
-
-    const uid = req.body.uid;
-    if (!uid) {
-      return res.status(400).json({ error: "Debes proporcionar el UID del usuario a eliminar" });
-    }
-
     await admin.auth().deleteUser(uid);
     await admin.firestore().collection("perfiles").doc(uid).delete();
-
-    return res.json({ success: true, message: "Usuario eliminado correctamente" });
+    return { success: true, message: "Usuario eliminado correctamente" };
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    throw new functions.https.HttpsError("internal", error.message);
   }
 });
