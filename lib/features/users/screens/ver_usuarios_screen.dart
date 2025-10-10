@@ -128,7 +128,10 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     }
 
     try {
-      final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'us-central1');
+      final functions = FirebaseFunctions.instanceFor(
+        app: Firebase.app(),
+        region: 'southamerica-west1',
+      );
       final callable = functions.httpsCallable('eliminarUsuario');
       final result = await callable.call({'uid': id});
       debugPrint('✅ Respuesta función: ${result.data}');

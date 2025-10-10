@@ -1,33 +1,28 @@
-const functions = require("firebase-functions");
+const { onCall } = require("firebase-functions/v2/https");
+const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Debes estar autenticado para realizar esta acción."
-    );
+setGlobalOptions({ region: "southamerica-west1" });
+
+exports.eliminarUsuario = onCall(async (request) => {
+  const context = request.auth;
+  if (!context) {
+    throw new Error("Debes estar autenticado para realizar esta acción.");
   }
 
-  const callerUid = context.auth.uid;
+  const callerUid = context.uid;
   const callerDoc = await admin.firestore().collection("perfiles").doc(callerUid).get();
   const callerRol = (callerDoc.data()?.rol || "").toLowerCase();
 
   if (!callerDoc.exists || callerRol !== "admin") {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "No tienes permisos para eliminar usuarios."
-    );
+    throw new Error("No tienes permisos para eliminar usuarios.");
   }
 
-  const uid = data.uid;
+  const uid = request.data.uid;
   if (!uid) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Debes proporcionar el UID del usuario a eliminar."
-    );
+    throw new Error("Debes proporcionar el UID del usuario a eliminar.");
   }
 
   try {
@@ -35,6 +30,6 @@ exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
     await admin.firestore().collection("perfiles").doc(uid).delete();
     return { success: true, message: "Usuario eliminado correctamente" };
   } catch (error) {
-    throw new functions.https.HttpsError("internal", error.message);
+    throw new Error("Error al eliminar el usuario: " + error.message);
   }
 });
