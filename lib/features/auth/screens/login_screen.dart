@@ -99,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
 
+                // Usuario (correo o RUT)
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
@@ -108,6 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
+                // Contraseña
                 PasswordField(
                   controller: _passwordController,
                   label: 'Contraseña',
@@ -151,6 +153,32 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // 👉 Enlace a registro
+                TextButton(
+                  onPressed: () {
+                    if (!mounted) return;
+                    Navigator.pushReplacementNamed(context, '/register');
+                  },
+                  child: const Text(
+                    '¿No tienes cuenta? Regístrate',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+
+                // 👉 Enlace a recuperar contraseña
+                TextButton(
+                  onPressed: () {
+                    if (!mounted) return;
+                    Navigator.pushNamed(context, '/forgot-password');
+                  },
+                  child: const Text(
+                    '¿Olvidaste tu contraseña?',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ),
               ],
             ),
