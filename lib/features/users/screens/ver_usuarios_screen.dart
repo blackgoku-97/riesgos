@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart'; // 👈 necesario para Firebase.app()
 import '../../../core/theme/app_colors.dart';
 import '../../auth/screens/login_screen.dart';
 import '../widgets/user_list_tile.dart';
@@ -154,7 +155,12 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       debugPrint('🔑 Token válido: ${token?.split('.').length == 3}');
       debugPrint('🗑 Eliminando UID objetivo: $id');
 
-      final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+      // 👇 Asegura que Functions use la misma app inicializada en main.dart
+      final functions = FirebaseFunctions.instanceFor(
+        app: Firebase.app(),
+        region: 'us-central1',
+      );
+
       await functions.httpsCallable('eliminarUsuario').call({'uid': id});
 
       await _refrescar();
