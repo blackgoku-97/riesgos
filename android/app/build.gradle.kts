@@ -1,6 +1,6 @@
 plugins {
     id("com.android.application")
-    id("com.google.gms.google-services") // 👈 Plugin de Firebase
+    id("com.google.gms.google-services")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.gestion_riesgos" // 👈 Debe coincidir con google-services.json
+        applicationId = "com.example.gestion_riesgos"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -39,11 +39,11 @@ flutter {
 }
 
 dependencies {
-    // 👇 Usa la BoM de Firebase para mantener versiones alineadas
-    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    // ✅ Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
 
-    // Ejemplo de dependencias Firebase
-    implementation 'com.google.firebase:firebase-auth'
-    implementation 'com.google.firebase:firebase-firestore'
-    implementation 'com.google.firebase:firebase-functions'
+    // ✅ Dependencias Firebase
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-functions")
 }

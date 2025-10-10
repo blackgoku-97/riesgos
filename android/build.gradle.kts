@@ -4,7 +4,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // ✅ En Kotlin DSL se usa comillas y paréntesis
+        // ✅ En Kotlin DSL se usan paréntesis y comillas dobles
         classpath("com.google.gms:google-services:4.4.2")
     }
 }
@@ -16,6 +16,7 @@ allprojects {
     }
 }
 
+// Ajuste de directorios de build (propio de Flutter)
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
