@@ -6,14 +6,12 @@ import 'delete_utils_planificacion.dart';
 class TarjetaUtilsPlanificacion extends StatelessWidget {
   final DocumentSnapshot doc;
   final VoidCallback onEditar;
-  final bool puedeEditar;
   final bool esAdmin;
 
   const TarjetaUtilsPlanificacion({
     super.key,
     required this.doc,
     required this.onEditar,
-    this.puedeEditar = false,
     this.esAdmin = false,
   });
 
@@ -97,7 +95,7 @@ class TarjetaUtilsPlanificacion extends StatelessWidget {
                 ),
               ],
             ),
-            if (puedeEditar) ...[
+            if (esAdmin) ...[
               espacio8,
               Row(
                 children: [
