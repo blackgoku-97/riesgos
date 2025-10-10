@@ -82,7 +82,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     final lista = snap.docs.map((d) {
       final data = d.data();
       return {
-        'id': d.id,
+        'id': d.id, // 👈 UID real del usuario
         'nombre': data['nombre'] ?? '',
         'email': data['email'] ?? '',
         'cargo': data['cargo'] ?? '',
@@ -148,13 +148,12 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     }
 
     try {
-      // 🔎 Debug: confirmar token antes de llamar
       final token = await user.getIdToken(true);
-      debugPrint('UID actual: ${user.uid}');
-      debugPrint('Email actual: ${user.email}');
-      debugPrint('Token válido: ${token?.split('.').length == 3}');
+      debugPrint('👤 Admin UID actual: ${user.uid}');
+      debugPrint('👤 Admin Email actual: ${user.email}');
+      debugPrint('🔑 Token válido: ${token?.split('.').length == 3}');
+      debugPrint('🗑 Eliminando UID objetivo: $id');
 
-      // 👇 usa la región correcta
       final functions = FirebaseFunctions.instanceFor(region: 'us-central1');
       await functions.httpsCallable('eliminarUsuario').call({'uid': id});
 
