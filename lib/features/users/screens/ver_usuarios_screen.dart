@@ -22,7 +22,6 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   List<Map<String, dynamic>> _usuarios = [];
   List<Map<String, dynamic>> _filtrados = [];
   final TextEditingController _searchCtrl = TextEditingController();
-  String? _rolUsuario;
 
   @override
   void initState() {
@@ -41,9 +40,6 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       final doc = await FirebaseFirestore.instance.collection('perfiles').doc(user.uid).get();
       if (!mounted) return;
       final rol = (doc.data()?['rol'] ?? '').toString().trim().toLowerCase();
-      setState(() {
-        _rolUsuario = rol;
-      });
       if (rol != 'admin') {
         if (!mounted) return;
         _redirigirALogin('No tienes permisos de administrador');
@@ -183,17 +179,6 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       ),
       body: Column(
         children: [
-          if (_rolUsuario != null)
-            Container(
-              width: double.infinity,
-              color: _rolUsuario == 'admin' ? Colors.green : Colors.orange,
-              padding: const EdgeInsets.all(8),
-              child: Text(
-                'Estás logueado como ${_rolUsuario!.toUpperCase()}',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-            ),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: _usuariosFuture,
