@@ -5,7 +5,6 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore db = FirebaseFirestore.instance;
 
-  // 👇 Getter para acceder al usuario actual desde tu UI
   User? get currentUser => _auth.currentUser;
 
   bool isValidEmail(String email) => _isValidEmail(email);
@@ -14,9 +13,13 @@ class AuthService {
   bool startsWithCapital(String text) =>
       text.isNotEmpty && text[0] == text[0].toUpperCase();
 
-  String capitalize(String text) {
+  String capitalizeWords(String text) {
     if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    return text
+        .split(' ')
+        .map((word) =>
+            word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .join(' ');
   }
 
   String formatRut(String rut) {
@@ -79,8 +82,8 @@ class AuthService {
     );
 
     await perfilesRef.doc(cred.user!.uid).set({
-      'nombre': capitalize(nombre),
-      'cargo': capitalize(cargo),
+      'nombre': capitalizeWords(nombre),
+      'cargo': capitalizeWords(cargo),
       'rutFormateado': formatRut(rutFormateado),
       'email': email,
       'rol': rol,
@@ -93,7 +96,6 @@ class AuthService {
     required String password,
   }) async {
     String emailFinal;
-
     if (_isValidEmail(userInput)) {
       emailFinal = userInput;
     } else if (_isValidRut(userInput)) {
@@ -102,7 +104,6 @@ class AuthService {
           .where('rutFormateado', isEqualTo: formatRut(userInput))
           .limit(1)
           .get();
-
       if (snapshot.docs.isEmpty) {
         throw Exception('No existe un usuario con ese RUT');
       }
@@ -110,7 +111,6 @@ class AuthService {
     } else {
       throw Exception('Debes ingresar un correo válido o un RUT válido');
     }
-
     return loginUser(email: emailFinal, password: password);
   }
 
@@ -124,7 +124,6 @@ class AuthService {
     if (!_isValidPassword(password)) {
       throw Exception('La contraseña debe tener al menos 8 caracteres, incluyendo letras y números');
     }
-
     try {
       await _auth.signInWithEmailAndPassword(email: email, password: password);
     } on FirebaseAuthException catch (e) {
@@ -157,19 +156,15 @@ class AuthService {
   bool _isValidRut(String rut) {
     final cleanRut = rut.replaceAll('.', '').replaceAll('-', '').toUpperCase();
     if (cleanRut.length < 2) return false;
-
     final body = cleanRut.substring(0, cleanRut.length - 1);
     final dv = cleanRut.substring(cleanRut.length - 1);
-
     if (!RegExp(r'^\d+$').hasMatch(body)) return false;
-
     int sum = 0;
     int multiplier = 2;
     for (int i = body.length - 1; i >= 0; i--) {
       sum += int.parse(body[i]) * multiplier;
       multiplier = multiplier == 7 ? 2 : multiplier + 1;
     }
-
     final expectedDV = 11 - (sum % 11);
     String dvCalc;
     if (expectedDV == 11) {
@@ -179,7 +174,6 @@ class AuthService {
     } else {
       dvCalc = expectedDV.toString();
     }
-
     return dvCalc == dv;
   }
 
