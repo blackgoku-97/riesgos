@@ -51,7 +51,7 @@ class AuthService {
       throw Exception('El correo electrónico no es válido');
     }
     if (!_isValidRut(rutFormateado)) {
-      throw Exception('El RUT ingresado no es válido (dígito verificador incorrecto)');
+      throw Exception('El RUT ingresado no es válido');
     }
     if (!_isValidPassword(password)) {
       throw Exception('La contraseña debe tener al menos 8 caracteres, incluyendo letras y números');
@@ -64,6 +64,16 @@ class AuthService {
     }
 
     final perfilesRef = db.collection('perfiles');
+
+    final existingEmail = await perfilesRef.where('email', isEqualTo: email).limit(1).get();
+    if (existingEmail.docs.isNotEmpty) {
+      throw Exception('Ya existe un usuario con este correo');
+    }
+
+    final existingRut = await perfilesRef.where('rutFormateado', isEqualTo: formatRut(rutFormateado)).limit(1).get();
+    if (existingRut.docs.isNotEmpty) {
+      throw Exception('Ya existe un usuario con este RUT');
+    }
 
     int totalUsuarios;
     try {

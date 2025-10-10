@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
@@ -53,17 +52,6 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // 🔎 Confirmar sesión y token
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final token = await user.getIdToken(true);
-        debugPrint('✅ UID tras login: ${user.uid}');
-        debugPrint('✅ Email tras login: ${user.email}');
-        debugPrint('✅ Token válido: ${token?.split('.').length == 3}');
-      } else {
-        debugPrint('❌ No hay sesión en FirebaseAuth');
-      }
-
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/dashboard');
     } catch (e) {
@@ -98,8 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset('assets/images/logo.png', height: 100),
                 const SizedBox(height: 32),
-
-                // Usuario (correo o RUT)
                 UserField(
                   controller: _userController,
                   isValid: _userValid,
@@ -108,8 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       : null,
                 ),
                 const SizedBox(height: 16),
-
-                // Contraseña
                 PasswordField(
                   controller: _passwordController,
                   label: 'Contraseña',
@@ -117,7 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   onToggleVisibility: () =>
                       setState(() => _obscurePass = !_obscurePass),
                 ),
-
                 const SizedBox(height: 12),
                 if (_error != null)
                   Text(
@@ -125,7 +108,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: const TextStyle(color: Colors.redAccent),
                     textAlign: TextAlign.center,
                   ),
-
                 const SizedBox(height: 24),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -154,10 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                 ),
-
                 const SizedBox(height: 8),
-
-                // 👉 Enlace a registro
                 TextButton(
                   onPressed: () {
                     if (!mounted) return;
@@ -168,8 +147,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
-
-                // 👉 Enlace a recuperar contraseña
                 TextButton(
                   onPressed: () {
                     if (!mounted) return;
