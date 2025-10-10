@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart'; // 👈 necesario para Firebase.app()
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/screens/login_screen.dart';
 import '../widgets/user_list_tile.dart';
@@ -38,13 +38,8 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       return;
     }
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('perfiles')
-          .doc(user.uid)
-          .get();
-
+      final doc = await FirebaseFirestore.instance.collection('perfiles').doc(user.uid).get();
       if (!mounted) return;
-
       final rol = (doc.data()?['rol'] ?? '').toString().trim().toLowerCase();
       setState(() {
         _rolUsuario = rol;
@@ -65,9 +60,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
 
   void _redirigirALogin(String mensaje) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
@@ -75,15 +68,11 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _cargarUsuarios() async {
-    final snap = await FirebaseFirestore.instance
-        .collection('perfiles')
-        .where('rol', isEqualTo: 'usuario')
-        .get();
-
+    final snap = await FirebaseFirestore.instance.collection('perfiles').where('rol', isEqualTo: 'usuario').get();
     final lista = snap.docs.map((d) {
       final data = d.data();
       return {
-        'id': d.id, // 👈 UID real del usuario
+        'id': d.id,
         'nombre': data['nombre'] ?? '',
         'email': data['email'] ?? '',
         'cargo': data['cargo'] ?? '',
@@ -92,12 +81,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         'rutFormateado': data['rutFormateado'] ?? '',
       };
     }).toList();
-
-    lista.sort((a, b) => a['nombre']
-        .toString()
-        .toLowerCase()
-        .compareTo(b['nombre'].toString().toLowerCase()));
-
+    lista.sort((a, b) => a['nombre'].toString().toLowerCase().compareTo(b['nombre'].toString().toLowerCase()));
     _usuarios = lista;
     _filtrados = lista;
     return lista;
@@ -114,10 +98,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           final cargo = (u['cargo'] ?? '').toString().toLowerCase();
           final email = (u['email'] ?? '').toString().toLowerCase();
           final rut = (u['rutFormateado'] ?? u['rut'] ?? '').toString().toLowerCase();
-          return nombre.contains(q) ||
-              cargo.contains(q) ||
-              email.contains(q) ||
-              rut.contains(q);
+          return nombre.contains(q) || cargo.contains(q) || email.contains(q) || rut.contains(q);
         }).toList();
       });
     }
@@ -142,37 +123,35 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay sesión activa en FirebaseAuth')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No hay sesión activa en FirebaseAuth')));
       return;
     }
 
     try {
       final token = await user.getIdToken(true);
-      debugPrint('👤 Admin UID actual: ${user.uid}');
-      debugPrint('👤 Admin Email actual: ${user.email}');
-      debugPrint('🔑 Token válido: ${token?.split('.').length == 3}');
-      debugPrint('🗑 Eliminando UID objetivo: $id');
+      final url = Uri.parse('https://us-central1-TU_PROYECTO.cloudfunctions.net/eliminarUsuario');
 
-      // 👇 Asegura que Functions use la misma app inicializada en main.dart
-      final functions = FirebaseFunctions.instanceFor(
-        app: Firebase.app(),
-        region: 'us-central1',
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'uid': id}),
       );
 
-      await functions.httpsCallable('eliminarUsuario').call({'uid': id});
-
-      await _refrescar();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuario eliminado correctamente')),
-      );
-    } on FirebaseFunctionsException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.message}')),
-      );
+      if (response.statusCode == 200) {
+        await _refrescar();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario eliminado correctamente')),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.body}')),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -187,10 +166,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       builder: (_) => UserEditDialog(usuario: usuario),
     );
     if (resultado != null) {
-      await FirebaseFirestore.instance
-          .collection('perfiles')
-          .doc(usuario['id'])
-          .update({
+      await FirebaseFirestore.instance.collection('perfiles').doc(usuario['id']).update({
         'nombre': resultado['nombre']!,
         'cargo': resultado['cargo']!,
         'rut': resultado['rut']!,
@@ -236,9 +212,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
                   return Column(
                     children: [
                       UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
-                      const Expanded(
-                        child: Center(child: Text('No hay usuarios registrados')),
-                      ),
+                      const Expanded(child: Center(child: Text('No hay usuarios registrados'))),
                     ],
                   );
                 }
