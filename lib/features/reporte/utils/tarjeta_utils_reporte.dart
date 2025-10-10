@@ -6,14 +6,12 @@ import 'delete_utils_reporte.dart';
 class TarjetaUtilsReporte extends StatelessWidget {
   final DocumentSnapshot doc;
   final VoidCallback onEditar;
-  final bool puedeEditar;
   final bool esAdmin;
 
   const TarjetaUtilsReporte({
     super.key,
     required this.doc,
     required this.onEditar,
-    this.puedeEditar = false,
     this.esAdmin = false,
   });
 
@@ -102,7 +100,7 @@ class TarjetaUtilsReporte extends StatelessWidget {
                 ),
               ],
             ),
-            if (puedeEditar) ...[
+            if (esAdmin) ...[
               espacio8,
               Row(
                 children: [
