@@ -4,8 +4,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // 👇 Necesario para que funcione el plugin com.google.gms.google-services
-        classpath 'com.google.gms:google-services:4.4.2'
+        // ✅ En Kotlin DSL se usa comillas y paréntesis
+        classpath("com.google.gms:google-services:4.4.2")
     }
 }
 
@@ -16,7 +16,6 @@ allprojects {
     }
 }
 
-// Ajuste de directorios de build (opcional, viene de Flutter)
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
