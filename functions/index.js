@@ -1,41 +1,37 @@
-const { setGlobalOptions } = require("firebase-functions/v2");
-const { onCall } = require("firebase-functions/v2/https");
-const { onUserCreated } = require("firebase-functions/v2/auth");
+const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 
 admin.initializeApp();
-setGlobalOptions({ region: "southamerica-west1" });
 
-// Configura el transporter con tu cuenta SMTP en cPanel
+// Transporter SMTP usando tu cuenta en cPanel
 const transporter = nodemailer.createTransport({
-  host: "mail.phos-chek.cl",   // servidor SMTP de tu dominio
-  port: 465,                   // puerto seguro (SSL)
+  host: "mail.phos-chek.cl",
+  port: 465, // si no funciona, prueba con 587 y secure: false
   secure: true,
   auth: {
-    user: "rperez@phos-chek.cl", // tu cuenta en cPanel
-    pass: "@B329cf36",         // contraseña de esa cuenta
+    user: "rperez@phos-chek.cl",
+    pass: "TU_PASSWORD",
   },
 });
 
-// Función 1: eliminar usuario
-exports.eliminarUsuario = onCall(async (request) => {
-  const context = request.auth;
-  if (!context) {
-    throw new Error("Debes estar autenticado para realizar esta acción.");
+// Función 1: eliminar usuario (callable)
+exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Debes estar autenticado.");
   }
 
-  const callerUid = context.uid;
+  const callerUid = context.auth.uid;
   const callerDoc = await admin.firestore().collection("perfiles").doc(callerUid).get();
   const callerRol = (callerDoc.data()?.rol || "").toLowerCase();
 
   if (!callerDoc.exists || callerRol !== "admin") {
-    throw new Error("No tienes permisos para eliminar usuarios.");
+    throw new functions.https.HttpsError("permission-denied", "No tienes permisos.");
   }
 
-  const uid = request.data.uid;
+  const uid = data.uid;
   if (!uid) {
-    throw new Error("Debes proporcionar el UID del usuario a eliminar.");
+    throw new functions.https.HttpsError("invalid-argument", "Debes proporcionar el UID.");
   }
 
   try {
@@ -43,17 +39,15 @@ exports.eliminarUsuario = onCall(async (request) => {
     await admin.firestore().collection("perfiles").doc(uid).delete();
     return { success: true, message: "Usuario eliminado correctamente" };
   } catch (error) {
-    throw new Error("Error al eliminar el usuario: " + error.message);
+    throw new functions.https.HttpsError("internal", "Error al eliminar el usuario: " + error.message);
   }
 });
 
 // Función 2: notificar al administrador cuando se crea un usuario
-exports.notificarNuevoUsuario = onUserCreated(async (event) => {
-  const user = event.data;
-
+exports.notificarNuevoUsuario = functions.auth.user().onCreate(async (user) => {
   const mailOptions = {
-    from: '"Sistema Riesgos" <rperez@phos-chek.cl>', // remitente
-    to: "rperez@phos-chek.cl",                       // destinatario (admin)
+    from: '"Sistema Riesgos" <rperez@phos-chek.cl>',
+    to: "rperez@phos-chek.cl",
     subject: "Nuevo usuario registrado",
     text: `Se ha registrado un nuevo usuario:\n\nEmail: ${user.email}\nUID: ${user.uid}`,
   };
