@@ -46,8 +46,8 @@ exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
 // Función 2: notificar al administrador cuando se crea un usuario
 exports.notificarNuevoUsuario = functions.auth.user().onCreate(async (user) => {
   const mailOptions = {
-    from: '"Sistema Riesgos" <rperez@phos-chek.cl>',
-    to: "rperez@phos-chek.cl",
+    from: "Sistema Riesgos",
+    to: "rodrigo.alvarez@phos-chek.cl, claudia.opazo@phos-chek.cl",
     subject: "Nuevo usuario registrado",
     text: `Se ha registrado un nuevo usuario:\n\nEmail: ${user.email}\nUID: ${user.uid}`,
   };
