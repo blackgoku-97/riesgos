@@ -49,7 +49,7 @@ exports.notificarNuevoUsuario = functions.auth.user().onCreate(async (user) => {
     from: "Sistema Riesgos Phos-Chek",
     to: "rodrigo.alvarez@phos-chek.cl, claudio.opazo@phos-chek.cl",
     subject: "Nuevo usuario registrado",
-    text: `Se ha registrado un nuevo usuario:\n\nEmail: ${user.email}\nUID: ${user.uid}`,
+    text: `Se ha registrado un nuevo usuario:\n\nEmail: ${user.email}\nNombre: ${user.displayName}`,
   };
 
   try {
