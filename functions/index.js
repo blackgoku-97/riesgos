@@ -47,7 +47,7 @@ exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
 exports.notificarNuevoUsuario = functions.auth.user().onCreate(async (user) => {
   const mailOptions = {
     from: "Sistema Riesgos",
-    to: "rodrigo.alvarez@phos-chek.cl, claudia.opazo@phos-chek.cl",
+    to: "rodrigo.alvarez@phos-chek.cl, claudio.opazo@phos-chek.cl",
     subject: "Nuevo usuario registrado",
     text: `Se ha registrado un nuevo usuario:\n\nEmail: ${user.email}\nUID: ${user.uid}`,
   };
