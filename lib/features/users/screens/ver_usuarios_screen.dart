@@ -9,7 +9,6 @@ import '../widgets/user_list_tile.dart';
 import '../widgets/user_search_bar.dart';
 import '../widgets/user_edit_dialog.dart';
 import '../widgets/confirm_delete_dialog.dart';
-import '../widgets/user_create_dialog.dart';
 
 class VerUsuariosScreen extends StatefulWidget {
   const VerUsuariosScreen({super.key});
@@ -22,7 +21,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   late Future<List<Map<String, dynamic>>> _usuariosFuture = Future.value([]);
   List<Map<String, dynamic>> _usuarios = [];
   List<Map<String, dynamic>> _filtrados = [];
-  final _searchCtrl = TextEditingController();
+  final TextEditingController _searchCtrl = TextEditingController();
 
   @override
   void initState() {
@@ -30,28 +29,37 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     _verificarAdmin();
   }
 
-  void _showSnack(String msg) {
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   Future<void> _verificarAdmin() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return _redirigirALogin('Debes iniciar sesión como administrador');
+    if (user == null) {
+      if (!mounted) return;
+      _redirigirALogin('Debes iniciar sesión como administrador');
+      return;
+    }
     try {
       final doc = await FirebaseFirestore.instance.collection('perfiles').doc(user.uid).get();
+      if (!mounted) return;
       final rol = (doc.data()?['rol'] ?? '').toString().trim().toLowerCase();
-      if (rol != 'admin') return _redirigirALogin('No tienes permisos de administrador');
-      setState(() => _usuariosFuture = _cargarUsuarios());
+      if (rol != 'admin') {
+        if (!mounted) return;
+        _redirigirALogin('No tienes permisos de administrador');
+        return;
+      }
+      setState(() {
+        _usuariosFuture = _cargarUsuarios();
+      });
     } catch (e) {
+      if (!mounted) return;
       _redirigirALogin('Error verificando permisos: $e');
     }
   }
 
   void _redirigirALogin(String mensaje) {
-    _showSnack(mensaje);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (_) => false,
+      (route) => false,
     );
   }
 
@@ -68,38 +76,68 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         'rut': data['rut'] ?? '',
         'rutFormateado': data['rutFormateado'] ?? '',
       };
-    }).toList()
-      ..sort((a, b) => a['nombre'].toString().toLowerCase().compareTo(b['nombre'].toString().toLowerCase()));
+    }).toList();
+    lista.sort((a, b) => a['nombre'].toString().toLowerCase().compareTo(b['nombre'].toString().toLowerCase()));
     _usuarios = lista;
     _filtrados = lista;
     return lista;
   }
 
-  void _filtrar(String q) {
-    q = q.trim().toLowerCase();
+  void _filtrar(String query) {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) {
+      setState(() => _filtrados = _usuarios);
+    } else {
+      setState(() {
+        _filtrados = _usuarios.where((u) {
+          final nombre = (u['nombre'] ?? '').toString().toLowerCase();
+          final cargo = (u['cargo'] ?? '').toString().toLowerCase();
+          final email = (u['email'] ?? '').toString().toLowerCase();
+          final rut = (u['rutFormateado'] ?? u['rut'] ?? '').toString().toLowerCase();
+          return nombre.contains(q) || cargo.contains(q) || email.contains(q) || rut.contains(q);
+        }).toList();
+      });
+    }
+  }
+
+  Future<void> _refrescar() async {
+    final lista = await _cargarUsuarios();
+    if (!mounted) return;
     setState(() {
-      _filtrados = q.isEmpty
-          ? _usuarios
-          : _usuarios.where((u) {
-              return ['nombre', 'cargo', 'email', 'rutFormateado', 'rut']
-                  .any((f) => (u[f] ?? '').toString().toLowerCase().contains(q));
-            }).toList();
+      _usuarios = lista;
+      _filtrados = lista;
     });
   }
 
-  Future<void> _refrescar() async => setState(() => _usuariosFuture = _cargarUsuarios());
-
   Future<void> _eliminarUsuario(String id) async {
-    final confirmar = await showDialog<bool>(context: context, builder: (_) => const ConfirmDeleteDialog());
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => const ConfirmDeleteDialog(),
+    );
     if (confirmar != true) return;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No hay sesión activa en FirebaseAuth')));
+      return;
+    }
     try {
-      final callable = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'southamerica-west1')
-          .httpsCallable('eliminarUsuario');
-      await callable.call({'uid': id});
+      final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'southamerica-west1');
+      final callable = functions.httpsCallable('eliminarUsuario');
+      final result = await callable.call({'uid': id});
+      debugPrint('✅ Respuesta función: ${result.data}');
       await _refrescar();
-      _showSnack("Usuario eliminado correctamente");
-    } catch (e) {
-      _showSnack("Error al eliminar usuario: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuario eliminado correctamente')));
+    } on FirebaseFunctionsException catch (e) {
+      debugPrint('❌ FirebaseFunctionsException: ${e.code} - ${e.message}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
+    } catch (e, stack) {
+      debugPrint('❌ Error inesperado: $e');
+      debugPrint('📌 StackTrace: $stack');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error inesperado: $e')));
     }
   }
 
@@ -109,25 +147,58 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       builder: (_) => UserEditDialog(usuario: usuario),
     );
     if (resultado != null) {
-      await FirebaseFirestore.instance.collection('perfiles').doc(usuario['id']).update(resultado);
+      await FirebaseFirestore.instance.collection('perfiles').doc(usuario['id']).update({
+        'nombre': resultado['nombre']!,
+        'cargo': resultado['cargo']!,
+        'rut': resultado['rut']!,
+        'rutFormateado': resultado['rutFormateado']!,
+      });
+      if (!mounted) return;
       _refrescar();
     }
   }
 
   Future<void> _mostrarDialogoCrearUsuario() async {
-    final resultado = await showDialog<Map<String, String>>(
+    final nombreCtrl = TextEditingController();
+    final rutCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    final resultado = await showDialog<bool>(
       context: context,
-      builder: (_) => const UserCreateDialog(),
+      builder: (_) => AlertDialog(
+        title: const Text("Crear nuevo usuario"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(controller: nombreCtrl, decoration: const InputDecoration(labelText: "Nombre")),
+              TextField(controller: rutCtrl, decoration: const InputDecoration(labelText: "RUT")),
+              TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: "Correo")),
+              TextField(controller: passCtrl, decoration: const InputDecoration(labelText: "Contraseña"), obscureText: true),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar")),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("Crear")),
+        ],
+      ),
     );
-    if (resultado != null) {
+    if (resultado == true) {
       try {
-        final callable = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'southamerica-west1')
-            .httpsCallable('createUserByAdmin');
-        await callable.call(resultado);
+        final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'southamerica-west1');
+        final callable = functions.httpsCallable('createUserByAdmin');
+        await callable.call({
+          'nombre': nombreCtrl.text.trim(),
+          'rut': rutCtrl.text.trim(),
+          'email': emailCtrl.text.trim(),
+          'password': passCtrl.text.trim(),
+        });
         await _refrescar();
-        _showSnack("Usuario creado con éxito");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Usuario creado con éxito")));
       } catch (e) {
-        _showSnack("Error al crear usuario: $e");
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error al crear usuario: $e")));
       }
     }
   }
@@ -136,37 +207,57 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.blanco,
-      appBar: AppBar(backgroundColor: AppColors.rojo, title: const Text('Usuarios')),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _usuariosFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
-          if (_filtrados.isEmpty) {
-            return Column(children: [
-              UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
-              const Expanded(child: Center(child: Text('No hay usuarios registrados'))),
-            ]);
-          }
-          return Column(children: [
-            UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _refrescar,
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _filtrados.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (_, i) => UserListTile(
-                    usuario: _filtrados[i],
-                    onEdit: () => _editarUsuario(_filtrados[i]),
-                    onDelete: () => _eliminarUsuario(_filtrados[i]['id']),
-                  ),
-                ),
-              ),
+      appBar: AppBar(
+        backgroundColor: AppColors.rojo,
+        title: const Text('Usuarios'),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _usuariosFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (_filtrados.isEmpty) {
+                  return Column(
+                    children: [
+                      UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
+                      const Expanded(child: Center(child: Text('No hay usuarios registrados'))),
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    UserSearchBar(controller: _searchCtrl, onChanged: _filtrar),
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _refrescar,
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filtrados.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final u = _filtrados[index];
+                            return UserListTile(
+                              usuario: u,
+                              onEdit: () => _editarUsuario(u),
+                              onDelete: () => _eliminarUsuario(u['id']),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ]);
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.rojo,
