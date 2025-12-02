@@ -115,40 +115,29 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       builder: (_) => const ConfirmDeleteDialog(),
     );
     if (confirmar != true) return;
-
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No hay sesión activa en FirebaseAuth')));
       return;
     }
-
     try {
-      final functions = FirebaseFunctions.instanceFor(
-        app: Firebase.app(),
-        region: 'southamerica-west1',
-      );
+      final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'southamerica-west1');
       final callable = functions.httpsCallable('eliminarUsuario');
       final result = await callable.call({'uid': id});
       debugPrint('✅ Respuesta función: ${result.data}');
       await _refrescar();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuario eliminado correctamente')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Usuario eliminado correctamente')));
     } on FirebaseFunctionsException catch (e) {
       debugPrint('❌ FirebaseFunctionsException: ${e.code} - ${e.message}');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.message}')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     } catch (e, stack) {
       debugPrint('❌ Error inesperado: $e');
       debugPrint('📌 StackTrace: $stack');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error inesperado: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error inesperado: $e')));
     }
   }
 
@@ -166,6 +155,51 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
       });
       if (!mounted) return;
       _refrescar();
+    }
+  }
+
+  Future<void> _mostrarDialogoCrearUsuario() async {
+    final nombreCtrl = TextEditingController();
+    final rutCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    final resultado = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Crear nuevo usuario"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(controller: nombreCtrl, decoration: const InputDecoration(labelText: "Nombre")),
+              TextField(controller: rutCtrl, decoration: const InputDecoration(labelText: "RUT")),
+              TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: "Correo")),
+              TextField(controller: passCtrl, decoration: const InputDecoration(labelText: "Contraseña"), obscureText: true),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancelar")),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text("Crear")),
+        ],
+      ),
+    );
+    if (resultado == true) {
+      try {
+        final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'southamerica-west1');
+        final callable = functions.httpsCallable('createUserByAdmin');
+        await callable.call({
+          'nombre': nombreCtrl.text.trim(),
+          'rut': rutCtrl.text.trim(),
+          'email': emailCtrl.text.trim(),
+          'password': passCtrl.text.trim(),
+        });
+        await _refrescar();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Usuario creado con éxito")));
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error al crear usuario: $e")));
+      }
     }
   }
 
@@ -224,6 +258,11 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: AppColors.rojo,
+        onPressed: _mostrarDialogoCrearUsuario,
+        child: const Icon(Icons.person_add, color: Colors.white),
       ),
     );
   }
