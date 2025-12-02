@@ -14,7 +14,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Función 1: crear usuario por administrador
+// Crear usuario por administrador
 exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Debes estar autenticado.");
@@ -28,8 +28,8 @@ exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("permission-denied", "No tienes permisos.");
   }
 
-  const { nombre, rut, email, password } = data;
-  if (!nombre || !rut || !email || !password) {
+  const { nombre, cargo, rut, email, password } = data;
+  if (!nombre || !cargo || !rut || !email || !password) {
     throw new functions.https.HttpsError("invalid-argument", "Faltan campos obligatorios.");
   }
 
@@ -42,6 +42,7 @@ exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
 
     await admin.firestore().collection("perfiles").doc(userRecord.uid).set({
       nombre,
+      cargo,
       rutFormateado: rut,
       email,
       rol: "usuario",
@@ -52,7 +53,7 @@ exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
       from: "Sistema Riesgos Phos-Chek",
       to: "rodrigo.alvarez@phos-chek.cl, claudio.opazo@phos-chek.cl",
       subject: "Nuevo usuario creado en el sistema",
-      text: `Se ha creado un nuevo usuario:\n\nNombre: ${nombre}\nEmail: ${email}\nRUT: ${rut}`,
+      text: `Se ha creado un nuevo usuario:\n\nNombre: ${nombre}\nCargo: ${cargo}\nEmail: ${email}\nRUT: ${rut}`,
     };
 
     await transporter.sendMail(mailOptions);
@@ -63,7 +64,7 @@ exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
   }
 });
 
-// Función 2: eliminar usuario
+// Eliminar usuario
 exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Debes estar autenticado.");
@@ -91,7 +92,7 @@ exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
   }
 });
 
-// Función 3: notificar cuando se crea un usuario en Auth (registro normal)
+// Notificar cuando se crea un usuario en Auth (registro normal)
 exports.notificarNuevoUsuario = functions.auth.user().onCreate(async (user) => {
   const mailOptions = {
     from: "Sistema Riesgos Phos-Chek",

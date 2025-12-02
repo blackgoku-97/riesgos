@@ -160,6 +160,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
 
   Future<void> _mostrarDialogoCrearUsuario() async {
     final nombreCtrl = TextEditingController();
+    final cargoCtrl = TextEditingController();
     final rutCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
     final passCtrl = TextEditingController();
@@ -171,6 +172,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
           child: Column(
             children: [
               TextField(controller: nombreCtrl, decoration: const InputDecoration(labelText: "Nombre")),
+              TextField(controller: cargoCtrl, decoration: const InputDecoration(labelText: "Cargo")),
               TextField(controller: rutCtrl, decoration: const InputDecoration(labelText: "RUT")),
               TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: "Correo")),
               TextField(controller: passCtrl, decoration: const InputDecoration(labelText: "Contraseña"), obscureText: true),
@@ -189,6 +191,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
         final callable = functions.httpsCallable('createUserByAdmin');
         await callable.call({
           'nombre': nombreCtrl.text.trim(),
+          'cargo': cargoCtrl.text.trim(),
           'rut': rutCtrl.text.trim(),
           'email': emailCtrl.text.trim(),
           'password': passCtrl.text.trim(),
