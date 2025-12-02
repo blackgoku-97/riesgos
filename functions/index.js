@@ -4,10 +4,9 @@ const nodemailer = require("nodemailer");
 
 admin.initializeApp();
 
-// Transporter SMTP usando tu cuenta en cPanel
 const transporter = nodemailer.createTransport({
   host: "mail.phos-chek.cl",
-  port: 465, // si no funciona, prueba con 587 y secure: false
+  port: 465,
   secure: true,
   auth: {
     user: "rperez@phos-chek.cl",
@@ -15,7 +14,56 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Función 1: eliminar usuario (callable)
+// Función 1: crear usuario por administrador
+exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Debes estar autenticado.");
+  }
+
+  const callerUid = context.auth.uid;
+  const callerDoc = await admin.firestore().collection("perfiles").doc(callerUid).get();
+  const callerRol = (callerDoc.data()?.rol || "").toLowerCase();
+
+  if (!callerDoc.exists || callerRol !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "No tienes permisos.");
+  }
+
+  const { nombre, rut, email, password } = data;
+  if (!nombre || !rut || !email || !password) {
+    throw new functions.https.HttpsError("invalid-argument", "Faltan campos obligatorios.");
+  }
+
+  try {
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: nombre,
+    });
+
+    await admin.firestore().collection("perfiles").doc(userRecord.uid).set({
+      nombre,
+      rutFormateado: rut,
+      email,
+      rol: "usuario",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const mailOptions = {
+      from: "Sistema Riesgos Phos-Chek",
+      to: "rodrigo.alvarez@phos-chek.cl, claudio.opazo@phos-chek.cl",
+      subject: "Nuevo usuario creado en el sistema",
+      text: `Se ha creado un nuevo usuario:\n\nNombre: ${nombre}\nEmail: ${email}\nRUT: ${rut}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    return { success: true, uid: userRecord.uid };
+  } catch (error) {
+    throw new functions.https.HttpsError("internal", "Error al crear usuario: " + error.message);
+  }
+});
+
+// Función 2: eliminar usuario
 exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Debes estar autenticado.");
@@ -43,18 +91,18 @@ exports.eliminarUsuario = functions.https.onCall(async (data, context) => {
   }
 });
 
-// Función 2: notificar al administrador cuando se crea un usuario
+// Función 3: notificar cuando se crea un usuario en Auth (registro normal)
 exports.notificarNuevoUsuario = functions.auth.user().onCreate(async (user) => {
   const mailOptions = {
     from: "Sistema Riesgos Phos-Chek",
     to: "rodrigo.alvarez@phos-chek.cl, claudio.opazo@phos-chek.cl",
-    subject: "Nuevo usuario registrado",
-    text: `Se ha registrado un nuevo usuario:\n\nEmail: ${user.email}\nNombre: ${user.displayName}`,
+    subject: "Nuevo usuario registrado en el sistema",
+    text: `Se ha registrado un nuevo usuario:\n\nEmail: ${user.email}\nNombre: ${user.displayName || "Sin nombre"}`,
   };
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log("✅ Notificación enviada a rodrigo.alvarez@phos-chek.cl y claudio.opazo@phos-chek.cl");
+    console.log("✅ Notificación enviada a administradores");
   } catch (error) {
     console.error("❌ Error enviando correo:", error);
   }
