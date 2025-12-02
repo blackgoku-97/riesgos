@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/services/auth_service.dart';
 import '../../auth/widgets/password_field.dart';
@@ -25,12 +26,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-
     _userController.addListener(() {
       _userValid = UserField.quickValidate(_userController.text, _authService);
       setState(() {});
     });
-
     _passwordController.addListener(() {
       final text = _passwordController.text.trim();
       _passValid = text.isNotEmpty && _authService.isValidPassword(text);
@@ -45,13 +44,11 @@ class _LoginScreenState extends State<LoginScreen> {
       _loading = true;
       _error = null;
     });
-
     try {
       await _authService.loginUserFlexible(
         userInput: _userController.text.trim(),
         password: _passwordController.text.trim(),
       );
-
       if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/dashboard');
     } catch (e) {
@@ -137,15 +134,30 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
                 const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    if (!mounted) return;
-                    Navigator.pushReplacementNamed(context, '/register');
+                FutureBuilder<QuerySnapshot>(
+                  future: FirebaseFirestore.instance
+                      .collection('perfiles')
+                      .where('rol', isEqualTo: 'admin')
+                      .get(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return SizedBox.shrink();
+                    }
+                    if (snapshot.hasData &&
+                        snapshot.data!.docs.length >= 2) {
+                      return SizedBox.shrink();
+                    }
+                    return TextButton(
+                      onPressed: () {
+                        if (!mounted) return;
+                        Navigator.pushReplacementNamed(context, '/register');
+                      },
+                      child: const Text(
+                        '¿No tienes cuenta? Regístrate',
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    );
                   },
-                  child: const Text(
-                    '¿No tienes cuenta? Regístrate',
-                    style: TextStyle(color: Colors.white70),
-                  ),
                 ),
                 TextButton(
                   onPressed: () {
