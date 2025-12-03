@@ -166,7 +166,7 @@ class _VerUsuariosScreenState extends State<VerUsuariosScreen> {
     );
     if (resultado != null) {
       try {
-        final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'southamerica-west1');
+        final functions = FirebaseFunctions.instanceFor(app: Firebase.app(), region: 'us-central1');
         final callable = functions.httpsCallable('createUserByAdmin');
         await callable.call(resultado);
         await _refrescar();
